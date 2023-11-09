@@ -53,9 +53,11 @@ app.use((req, res, next) => {
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log api calls to the console when in development mode!
 
 
-//todo: change the following routs
+//todo: inplement protected feature for routs: create question, quiz are allowed to admin only
 const userRouter = require("./routes/userRoutes.js");
+const questionRouter = require("./routes/questionRoutes");
 app.use('/user', userRouter);
+app.use('/question',questionRouter);
 
 //for undefined routs
 const AppError = require('./util/appError');

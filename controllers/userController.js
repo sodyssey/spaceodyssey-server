@@ -5,7 +5,13 @@ const catchAsync = require("../util/catchAsync");
 
 exports.createUser = catchAsync(async (req, res, next) => {
 
-    //todo: implement pre save security features
+    /*
+    * todo: implement pre save security features
+    * 1. encrypt password (done)
+    * 2. remove confirm password (done)
+    * ?? what else ??
+    * */
+
     //not simply using req.body due to security reasons
     const newUser = await User.create({
         username: req.body.username,
@@ -16,7 +22,6 @@ exports.createUser = catchAsync(async (req, res, next) => {
         active: true,
         isAdmin: false //one can be admin only by manually changing data in DB
     });
-
 
     res.status(201).json({
         status: 'success', data: {

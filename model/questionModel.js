@@ -14,7 +14,7 @@ const questionSchema = new mongoose.Schema({
         validate: {
             validator: function (val) {
                 const asciiVal = val.toLowerCase().charCodeAt(0);
-                const max = (96 + arr.length);
+                const max = (96 + this.options.length);
                 return asciiVal >= 97 && asciiVal <= max;
             },
             message: "There is no such option!"

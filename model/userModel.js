@@ -44,5 +44,16 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+//before saving, encrypt the password and remove confirm password
+
+userSchema.pre('save', async function (next) {
+    // no need to do this every time, do only when password in modified
+    if (!(this.isModified('password'))) return next();
+    //encrypt the password
+    this.password = await bcryptjs.hash(this.password, 12);
+    this.passwordConfirm = undefined; //don't save this in the database
+    next();
+});
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;
