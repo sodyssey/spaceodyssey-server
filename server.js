@@ -1,3 +1,5 @@
+//todo: i am using locally hosted mongoDb server instead of online one, make it online
+
 // things related to server are here '>'
 const path = require("path");
 const dotenv = require("dotenv");
@@ -7,8 +9,7 @@ dotenv.config({path: path.join(__dirname, 'config.env')});
 //defined in the beginning to catch uncaught exceptions asap
 process.on('uncaughtException', err=>{
     console.log('Uncaught Exception 💥 Shutting down!...');
-    console.log(err.name);
-    console.log(err.message);
+    console.log(err);
     process.exit(1);
 });
 
@@ -25,7 +26,6 @@ mongoose.connect(DB, {
 });
 
 const app = require("./app");
-
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`App running on port ${port}`);
@@ -34,8 +34,7 @@ app.listen(port, () => {
 
 process.on('unhandledRejection', err => {
     console.log('Unhandled Rejection 💥 Shutting down!...');
-    console.log(err.name);
-    console.log(err.message);
+    console.log(err);
     process.exit(1);
 });
 

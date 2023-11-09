@@ -13,24 +13,24 @@ const hpp = require("hpp"); //input safety
 //todo: check if limit is a good idea!
 //might need to disable this as our app require a lot of api requests
 //limit 100 api access requests per hour
-const limiter = rateLimit({
-  max: 100, windowMs: 60 * 60 * 1000, message: "Too many requests from this IP. Please try again later."
-});
+// const limiter = rateLimit({
+//   max: 100, windowMs: 60 * 60 * 1000, message: "Too many requests from this IP. Please try again later."
+// });
 //limit api access
-app.use('/api', limiter);
+// app.use('/api', limiter);
 
 //security HTTP headers
-app.use(helmet());
+// app.use(helmet());
 
-//read data from the body into req.body, max is 10kb.
+// read data from the body into req.body, max is 10kb.
 app.use(express.json({limit: '10kb'})); //data from body shall be added to req
 
 //sanitize against non SQL code injection
-app.use(mongoSanitize());
+// app.use(mongoSanitize());
 
 //sanitize against xss
 //will convert html symbols to,for example < to &lt;
-app.use(xss());
+// app.use(xss());
 
 //todo: preventing parameter pollution
 //suppose we have .../.../...?sort=price&sort=difficulty then in this will be converted to
@@ -54,16 +54,13 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log a
 
 
 //todo: change the following routs
-const tourRouter = require("./routes/tourRoutes.js");
 const userRouter = require("./routes/userRoutes.js");
-//different routes can be written like this to improve the developer experience
-app.use('/api/v1/tours', tourRouter); //this will cause router tourRouter to act when request start with 'api/vi/tours/*'
-app.use('/api/v1/users', userRouter); //this will cause router userRouter to act when request start with 'api/vi/users/*'
+app.use('/user', userRouter);
 
-const AppError = require('./util/appError');
 //for undefined routs
+const AppError = require('./util/appError');
 app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on the server!`, 404));
+  next(new AppError(`Can't find ${req.originalUrl} on the server! and its spaceOdyssey`, 404));
 });
 
 //in case of operational error this middleware function will be called
