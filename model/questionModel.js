@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
-
     questionString: {
         type: String,
         required: [true, "There must be a question!"],
@@ -10,13 +9,18 @@ const questionSchema = new mongoose.Schema({
         type: [String],
         required: [true, "Please provide some options!"],
         minLength: 4
-    } , correctOption : {
+    }, correctOption: {
         type: String,
-        validate:{
-            validator: function (opt) {
-                
-            }
+        validate: {
+            validator: function (val) {
+                const asciiVal = val.toLowerCase().charCodeAt(0);
+                const max = (96 + arr.length);
+                return asciiVal >= 97 && asciiVal <= max;
+            },
+            message: "There is no such option!"
         }
     }
-
 });
+
+const Question = mongoose.model('Question', questionSchema);
+module.exports = Question;
