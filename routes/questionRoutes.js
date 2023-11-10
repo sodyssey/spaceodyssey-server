@@ -3,7 +3,7 @@ const questionController = require("./../controllers/questionController"); //thi
 const authController = require("./../controllers/authController");
 const router = express.Router();
 
-//for creating a user
+//for creating a question
 router.route('/').post(questionController.createQuestion);
 
 module.exports = router;
