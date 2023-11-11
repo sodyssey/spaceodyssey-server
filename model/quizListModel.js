@@ -2,11 +2,7 @@ const mongoose = require('mongoose');
 
 
 const quizListSchema = new mongoose.Schema({
-
-    user:{
-        type: mongoose.Schema.ObjectId,
-        ref: 'User'
-    }, quizes:{
+    quizes:{
         type: [{
             quiz: {
                 type: mongoose.Schema.ObjectId,

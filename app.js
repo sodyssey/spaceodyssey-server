@@ -55,10 +55,8 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log a
 
 //todo: inplement protected feature for routs: create question, quiz are allowed to admin only
 const userRouter = require("./routes/userRoutes.js");
-const questionRouter = require("./routes/questionRoutes");
 const quizRouter = require("./routes/quizRouter");
-app.use('/user', userRouter);
-app.use('/question',questionRouter);
+app.use('/users', userRouter);
 app.use('/quiz',quizRouter);
 
 //for undefined routs

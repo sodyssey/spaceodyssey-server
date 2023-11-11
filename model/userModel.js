@@ -23,7 +23,13 @@ const userSchema = new mongoose.Schema({
         required: [true, "A user must have a username"],
         minLength: [5, "name too short(min=5)!"],
         maxLength: [15, "name too long(max=15)!"]
-    }, password: {
+    },
+    avatar: String,
+    quizList: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'QuizList'
+    }
+    , password: {
         type: String, required: [true, "Please create a password!"], minlength: 8, select: false //do not select this ever
     }, passwordConfirm: {
         type: String, required: [true, "Please confirm the password!"], validate: {
@@ -45,7 +51,6 @@ const userSchema = new mongoose.Schema({
 });
 
 //before saving, encrypt the password and remove confirm password
-
 userSchema.pre('save', async function (next) {
     // no need to do this every time, do only when password in modified
     if (!(this.isModified('password'))) return next();
@@ -54,6 +59,51 @@ userSchema.pre('save', async function (next) {
     this.passwordConfirm = undefined; //don't save this in the database
     next();
 });
+
+//method to check the password
+userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
+    return await bcryptjs.compare(candidatePassword, userPassword);
+}
+
+//returns true if token was created BEFORE change in password
+userSchema.methods.changePasswordAfter = function (JWTTimeStamp) {
+    if (this.passwordChangedAt) {
+        const changedTimestamp = parseInt(`${this.passwordChangedAt.getTime() / 1000}`, 10);
+        return JWTTimeStamp < changedTimestamp;
+    }
+    return false;
+}
+
+//modify passwordChangedAt when password is changed
+userSchema.pre('save', function (next) {
+    if (!this.isModified('password') || this.isNew) return next();
+    //sometimes saving to database is slow
+    // , so ... decreasing 10 second so it not to create any problem while loging in using token
+    this.passwordChangedAt = Date.now() - 10000;
+    console.log("pre save 2 ended");
+    next();
+});
+
+//hide inactive users: these users are deleted
+userSchema.pre(/^find/, function (next) {
+    //this points to current query
+    this.find({active: {$ne: false}});
+    next();
+});
+
+//creates a reset password token to
+userSchema.methods.createPasswordResetToken = function () {
+    //we cant simply store resetToken as it is into the database due to security issues
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    //the following two will be stored instead
+    //the next line will update the resetToken
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.passwordResetExpires = Date.now() + (10 * 60 * 100); //valid for 10 minutes
+    //we have not 'saved' this user document yet, that will be done in the resetPassword function
+    //that is supposed to call createPasswordResetToken
+    return resetToken;
+}
+
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

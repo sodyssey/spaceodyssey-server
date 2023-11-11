@@ -1,6 +1,5 @@
 const Quiz = require("./../model/quizModel");
 const Question = require("./../model/questionModel");
-const questionController = require("./../controllers/questionController");
 const APIFeatures = require("./../util/APIFeatures");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
