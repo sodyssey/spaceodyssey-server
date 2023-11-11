@@ -155,10 +155,15 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 });
 
+
+//todo: no user is being found even on valid token
 exports.resetPassword = catchAsync(async (req, res, next) => {
 
     //1. get user based on token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    console.log(hashedToken);
+
     const user = await User.findOne({passwordResetToken: hashedToken, passwordResetExpires: {$gt: Date.now()}});
 
 

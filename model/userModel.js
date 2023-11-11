@@ -98,7 +98,7 @@ userSchema.methods.createPasswordResetToken = function () {
     //the following two will be stored instead
     //the next line will update the resetToken
     this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    this.passwordResetExpires = Date.now() + (10 * 60 * 100); //valid for 10 minutes
+    this.passwordResetExpires = Date.now() + (10 * 60 * 1000); //valid for 10 minutes
     //we have not 'saved' this user document yet, that will be done in the resetPassword function
     //that is supposed to call createPasswordResetToken
     return resetToken;
