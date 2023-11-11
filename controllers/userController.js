@@ -51,12 +51,24 @@ exports.updateMe = async (req, res, next) => {
 };
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-    const user = await User.findByIdAndUpdate(req.user._id,{active: false});
+    //why are we not asking for password confirm?
+
+    //1. get user from the collection
+    //this is only accessable after user login hence req has user
+    let user = await User.findById(req.user._id).select('+password');
+
+    //2. check if posted password is correct
+    if (!user ||!req.body.password || !(await user.correctPassword(req.body.password, user.password))) {
+        return next(new AppError("Incorrect password!", 401));
+    }
+
+    user = await User.findByIdAndUpdate(req.user._id, {active: false});
 
     //we won't see the response in postman as status code is 204
     res.status(204).json({
         status: 'success',
-        data:null
+        message: "User deleted!",
+        data: null
     });
 
 });
