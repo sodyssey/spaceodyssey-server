@@ -29,11 +29,8 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
             }
 
             res.status(400).json({
-                status: "fail",
-                error: e,
-                data: {
-                    index: index,
-                    question: question
+                status: "fail", error: e, data: {
+                    index: index, question: question
                 }
             });
             return;
@@ -42,41 +39,39 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
 
     //3. if no error, create quiz
     const newQuiz = await Quiz.create({
-        topic: req.body.topic,
-        questions: questionsSoFar
+        topic: req.body.topic, questions: questionsSoFar
     });
 
     //4. add that quiz to quizCreated list
     const user = await User.findById(req.user._id);
     const quizCreated = await QuizList.findById(user.quizCreated);
     quizCreated.quizes.push({
-        quiz: newQuiz._id,
-        choosenOptions: undefined, //because we are creating a quiz
+        quiz: newQuiz._id, choosenOptions: undefined, //because we are creating a quiz
         quizDate: Date.now()
     });
     await quizCreated.save();
 
     res.status(200).json({
-        status: 'success',
-        data: {
+        status: 'success', data: {
             newQuiz: newQuiz
         }
     });
 
 });
 
+//todo: if user already given that quiz, raise error
 exports.giveQuiz = catchAsync(async (req, res, next) => {
     const quiz = await Quiz.findById(req.params.quizID).populate('questions', "questionString options");
     if (!quiz) return next(new AppError("This quiz is not available!", 404));
 
     res.status(200).json({
-        status: 'success',
-        data: {
+        status: 'success', data: {
             quiz: quiz
         }
     });
 });
 
+//if user already given that quiz, raise error
 exports.submitQuiz = catchAsync(async (req, res, next) => {
     const choosenOptions = req.body.choosenOptions;
     if (!choosenOptions) return next(new AppError("Choosen options not provided", 401))
@@ -98,9 +93,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         const user = await User.findById(req.user._id);
         const quizList = await QuizList.findById(user.quizList);
         quizList.quizes.push({
-            quiz: quiz._id,
-            choosenOptions: choosenOptions,
-            quizDate: Date.now()
+            quiz: quiz._id, choosenOptions: choosenOptions, quizDate: Date.now()
         });
         await quizList.save();
     }
@@ -112,5 +105,31 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         choosenOptions: choosenOptions,
         questions: quiz.questions
     });
+});
 
+//get all the available quizes
+exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
+    //get all the quizes available
+    let quizes = await Quiz.find().select('topic _id');
+
+    //remove quizes that user has given, if any
+    if (req.user) {
+        const user = await User.findById(req.user._id);
+        const quizList = await QuizList.findById(user.quizList);
+        const quizesGiven = quizList.quizes.map(obj => obj.quiz);
+        quizes = quizes.filter(quiz => !(quizesGiven.includes(quiz._id)));
+    }
+
+    //skip appropriate number of quizes
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 10;
+    const skip = (page - 1) * limit;
+    quizes = quizes.slice(skip, skip + limit);
+
+    //return the remaining
+    res.status(200).json({
+        status: "success", length: quizes.length, data: {
+            quizes: quizes
+        }
+    });
 });
