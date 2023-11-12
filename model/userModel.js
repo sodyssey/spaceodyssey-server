@@ -25,11 +25,14 @@ const userSchema = new mongoose.Schema({
         maxLength: [15, "name too long(max=15)!"]
     },
     avatar: String,
-    quizList: {
+    quizList: { //can a admin give quize?
         type: mongoose.Schema.ObjectId,
         ref: 'QuizList'
-    }
-    , password: {
+    },
+    quizCreated: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'QuizList'
+    }, password: {
         type: String, required: [true, "Please create a password!"], minlength: 8, select: false //do not select this ever
     }, passwordConfirm: {
         type: String, required: [true, "Please confirm the password!"], validate: {

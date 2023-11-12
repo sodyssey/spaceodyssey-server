@@ -39,11 +39,15 @@ exports.signup = catchAsync(async (req, res, next) => {
         quizes: []
     });
 
+    const quizCreated = await QuizList.create({
+        quizes: []
+    })
+
     //not simply using req.body due to security reasons
     const newUser = await User.create({
         username: req.body.username, email: req.body.email, name: req.body.name, password: req.body.password, //chillax! this will be encrypted before save
         passwordConfirm: req.body.passwordConfirm, //this will not be stored in DB
-        quizList: quizList._id, active: true, isAdmin: false //one can be admin only by manually changing data in DB
+        quizList: quizList._id, quizCreated: quizCreated._id, active: true, isAdmin: false //one can be admin only by manually changing data in DB
     });
 
     //_id is the payload we want to put in jwt
@@ -64,7 +68,7 @@ exports.login = catchAsync(async (req, res, next) => {
     //we have restricted the default selection of password, so we explicitly select password
     const user = await User.findOne({username}).select('+password');
     if (!user || !(await user.correctPassword(password, user.password))) {
-        return next(new AppError("Incorrect email or password!", 401));
+        return next(new AppError("Incorrect username or password!", 401));
     }
     //
     //if all ok, send token to client
@@ -89,7 +93,6 @@ exports.protect = catchAsync(async (req, res, next) => {
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     // check if user still exists => to check the case if user has jwt token but the user was deleted!
-    //todo: hide inactive users from ^find result
     const freshUser = await User.findOne({_id: decoded.id});
     if (!freshUser) {
         return next(new AppError("The user belonging to this token does not exist.", 401));
@@ -106,15 +109,11 @@ exports.protect = catchAsync(async (req, res, next) => {
     next();
 });
 
-//todo: cure theis method
-exports.restrictTo = (...roles) => {
-    return (req, res, next) => {
-        //roles is an array
-        if (!roles.includes(req.user.role)) {
-            return next(new AppError('You dont have permission to perform this action!', 403));
-        }
-        next();
+exports.restrictToAdmin = (req, res, next) => {
+    if (!req.user.isAdmin) {
+        return next(new AppError('You dont have permission to perform this action!', 403));
     }
+    next();
 }
 
 

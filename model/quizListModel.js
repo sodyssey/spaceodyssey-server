@@ -7,10 +7,10 @@ const quizListSchema = new mongoose.Schema({
             quiz: {
                 type: mongoose.Schema.ObjectId,
                 ref: 'Quiz'
-            }, choosenOptions: [String],
-            quizTakenOn: {
+            }, choosenOptions: [String], //would be empty for admin
+            quizDate: { //will store taken or created date, depending on the user type
                 type: Date,
-                required: [true, "Please provide a date on which quiz was taken!"]
+                required: [true, "Please provide a date on which quiz was taken/created!"]
             }
         }]
     }

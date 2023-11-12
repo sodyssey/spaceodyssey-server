@@ -11,6 +11,7 @@ const questionSchema = new mongoose.Schema({
         minLength: 4
     }, correctOption: {
         type: String,
+        lowercase: true,
         validate: {
             validator: function (val) {
                 const asciiVal = val.toLowerCase().charCodeAt(0);
