@@ -12,5 +12,7 @@ router.route('/getQuizes').get(quizController.getAvailableQuizes);
 // router.route('/getQuizes').get(authController.protect, quizController.getAvailableQuizes);
 router.route('/getSubmittedQuizes').get(authController.protect, quizController.getSubmittedQuizes);
 router.route('/getCreatedQuizes').get(authController.protect,authController.restrictToAdmin ,quizController.getCreatedQuizes);
+router.route('/getSubmittedQuizes/:quizID').get(authController.protect, quizController.getParticularSubmittedQuiz);
+router.route('/getCreatedQuizes/:quizID').get(authController.protect, authController.restrictToAdmin,quizController.getParticularCreatedQuiz);
 
 module.exports = router;

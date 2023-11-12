@@ -78,8 +78,6 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
     const quiz = await Quiz.findById(req.params.quizID).populate('questions');
     if (!quiz) return next(new AppError("This quiz is not available!", 404));
 
-    console.log(quiz)
-
     if (choosenOptions.length !== quiz.questions.length) return next(new AppError("Answer count invalid!", 401));
 
     let correct = 0;
@@ -151,6 +149,7 @@ exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
 
     for (const quiz of quizes) {
         const toAdd = {};
+        toAdd._id=quiz.quiz._id;
         toAdd.topic = quiz.quiz.topic;
         toAdd.totalQuestions = quiz.quiz.questions.length;
         toAdd.marksObtained = quiz.quizMarks;
@@ -176,7 +175,9 @@ exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
     quizes = quizes.slice(skip, skip + limit);
 
     for (const quiz of quizes) {
+        console.log(quiz);
         const toAdd = {};
+        toAdd._id=quiz.quiz._id;
         toAdd.topic = quiz.quiz.topic;
         toAdd.totalQuestions = quiz.quizMarks;
         toAdd.date = quiz.quizDate;
@@ -184,6 +185,76 @@ exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
     }
     res.status(200).json({
         status: "success", length: data.length, data: data
+    });
+});
+
+exports.getParticularSubmittedQuiz = catchAsync(async (req, res, next) => {
+    //topic
+    //date
+    //totalQuestions
+    //marksObtained
+    //allQuestions
+    //selectedOptions
+    //correctOptions
+    const user = await User.findById(req.user._id).populate("quizList");
+    const quiz = await Quiz.findById(req.params.quizID).populate('questions');
+    if (!quiz) return next(new AppError("This quiz is not available!", 404));
+
+    let quizDataFromUser = null;
+    for (const obj of user.quizList.quizes) {
+        console.log(obj.quiz);
+        console.log(quiz._id);
+        console.log(`${obj.quiz}` === `${quiz._id}`)
+        if (`${obj.quiz}` === `${quiz._id}`) quizDataFromUser = obj;
+        if (quizDataFromUser) break;
+    }
+
+    console.log(quizDataFromUser);
+
+    if (!quizDataFromUser) return next(new AppError("You have not given this quiz", 400));
+
+    const data = {};
+    data.topic = quiz.topic;
+    data.quizDate = quizDataFromUser.quizDate;
+    data.totalQuestions = quiz.questions.length;
+    data.marksObtained = quizDataFromUser.quizMarks;
+    data.questionAndCorrectAnswers = quiz.questions;
+    data.choosenOptions = quizDataFromUser.choosenOptions;
+
+    res.status(200).json({
+        status: 'success',
+        data: data
+    });
+});
+
+
+exports.getParticularCreatedQuiz = catchAsync(async (req, res, next) => {
+    //topic
+    //date
+    //totalQuestions
+    //allQuestions
+    //correctOptions
+    const user = await User.findById(req.user._id).populate("quizCreated");
+    const quiz = await Quiz.findById(req.params.quizID).populate('questions');
+    if (!quiz) return next(new AppError("This quiz is not available!", 404));
+
+    let quizDataFromUser = null;
+    for (const obj of user.quizCreated.quizes) {
+        if (`${obj.quiz}` === `${quiz._id}`) quizDataFromUser = obj;
+        if (quizDataFromUser) break;
+    }
+
+    if (!quizDataFromUser) return next(new AppError("You have not given this quiz", 400));
+
+    const data = {};
+    data.topic = quiz.topic;
+    data.quizDate = quizDataFromUser.quizDate;
+    data.totalQuestions = quizDataFromUser.quizMarks;
+    data.questionAndCorrectAnswers = quiz.questions;
+
+    res.status(200).json({
+        status: 'success',
+        data: data
     });
 });
 
