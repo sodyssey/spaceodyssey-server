@@ -45,9 +45,9 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
     //4. add that quiz to quizCreated list
     const user = await User.findById(req.user._id);
     const quizCreated = await QuizList.findById(user.quizCreated);
-    quizCreated.quizes.push({
+    quizCreated.quizes.unshift({
         quiz: newQuiz._id, choosenOptions: undefined, //because we are creating a quiz
-        quizDate: Date.now()
+        quizMarks: index, quizDate: Date.now()
     });
     await quizCreated.save();
 
@@ -93,7 +93,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         const user = await User.findById(req.user._id);
         const quizList = await QuizList.findById(user.quizList);
         quizList.quizes.push({
-            quiz: quiz._id, choosenOptions: choosenOptions, quizDate: Date.now()
+            quiz: quiz._id, choosenOptions: choosenOptions, quizMarks: correct, quizDate: Date.now()
         });
         await quizList.save();
     }
@@ -101,7 +101,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         total: quiz.questions.length,
-        correct: correct,
+        quizMarks: correct,
         choosenOptions: choosenOptions,
         questions: quiz.questions
     });
@@ -109,6 +109,8 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
 
 //get all the available quizes
 exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
+    //this approach might have scalability issues '>'
+
     //get all the quizes available
     let quizes = await Quiz.find().select('topic _id');
 
@@ -133,3 +135,55 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+//get all the quizes user has submitted
+exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
+    //this approach might have scalability issues '>'
+    const user = await User.findById(req.user._id);
+    const data = [];
+    const quizesGiven = await QuizList.findById(user.quizList).populate("quizes.quiz");
+    let quizes = quizesGiven.quizes;
+
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 10;
+    const skip = (page - 1) * limit;
+    quizes = quizes.slice(skip, skip + limit);
+
+    for (const quiz of quizes) {
+        const toAdd = {};
+        toAdd.topic = quiz.quiz.topic;
+        toAdd.totalQuestions = quiz.quiz.questions.length;
+        toAdd.marksObtained = quiz.quizMarks;
+        toAdd.date = quiz.quizDate;
+        data.push(toAdd);
+    }
+    res.status(200).json({
+        status: "success", length: data.length, data: data
+    });
+});
+
+//get all the quizes admin has created
+exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
+    //this approach might have scalability issues '>'
+    const user = await User.findById(req.user._id);
+    const data = [];
+    const quizesCreated = await QuizList.findById(user.quizCreated).populate("quizes.quiz");
+    let quizes = quizesCreated.quizes;
+
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 10;
+    const skip = (page - 1) * limit;
+    quizes = quizes.slice(skip, skip + limit);
+
+    for (const quiz of quizes) {
+        const toAdd = {};
+        toAdd.topic = quiz.quiz.topic;
+        toAdd.totalQuestions = quiz.quizMarks;
+        toAdd.date = quiz.quizDate;
+        data.push(toAdd);
+    }
+    res.status(200).json({
+        status: "success", length: data.length, data: data
+    });
+});
+
