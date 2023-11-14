@@ -44,9 +44,9 @@ app.use(express.json({limit: '10kb'})); //data from body shall be added to req
 
 //adding the request time to req object
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.headers);
-  next();
+    req.requestTime = new Date().toISOString();
+    // console.log(req.headers);
+    next();
 });
 
 //development dependency, logs the recent request in the console
@@ -56,13 +56,15 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log a
 //todo: inplement protected feature for routs: create question, quiz are allowed to admin only
 const userRouter = require("./routes/userRoutes.js");
 const quizRouter = require("./routes/quizRouter");
+const lessonsRouter = require("./routes/lessonsRouter");
 app.use('/users', userRouter);
-app.use('/quiz',quizRouter);
+app.use('/quiz', quizRouter);
+app.use('/lessons', lessonsRouter);
 
 //for undefined routs
 const AppError = require('./util/appError');
 app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on the server! and its spaceOdyssey`, 404));
+    next(new AppError(`Can't find ${req.originalUrl} on the server! and its spaceOdyssey`, 404));
 });
 
 //in case of operational error this middleware function will be called

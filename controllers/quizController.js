@@ -1,7 +1,6 @@
 const Quiz = require("./../model/quizModel");
 const User = require("./../model/userModel");
 const Question = require("./../model/questionModel");
-const APIFeatures = require("./../util/APIFeatures");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const QuizList = require("../model/quizListModel");
@@ -86,6 +85,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         if (question.correctOption === choosenOptions[i++]?.toLowerCase()) correct++;
     }
 
+    //todo: check if there is a bearerer token and then call protect etc
     //if there is a user, save it to quizes that user have given
     if (req.user) {
         const user = await User.findById(req.user._id);
@@ -112,6 +112,7 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     //get all the quizes available
     let quizes = await Quiz.find().select('topic _id');
 
+    //todo: check if there is a bearerer token and then call protect etc
     //remove quizes that user has given, if any
     if (req.user) {
         const user = await User.findById(req.user._id);
