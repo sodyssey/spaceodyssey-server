@@ -1,4 +1,3 @@
-//todo: i am using locally hosted mongoDb server instead of online one, make it online
 
 // things related to server are here '>'
 const path = require("path");
@@ -15,7 +14,7 @@ process.on('uncaughtException', err=>{
 
 const mongoose = require('mongoose');
 // const DB = process.env.DATABASE.replace('<password>', process.env.DATABASE_PASSWORD);
-const DB = process.env.DATABASE_LOCALE;
+const DB = process.env.DATABASE.replace("<password>",process.env.DATABASE_PASSWORD);
 mongoose.connect(DB, {
     useNewUrlParser: true,
     useCreateIndex: true,
