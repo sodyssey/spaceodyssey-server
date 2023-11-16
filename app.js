@@ -52,11 +52,16 @@ app.use((req, res, next) => {
 //development dependency, logs the recent request in the console
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log api calls to the console when in development mode!
 
-
-//todo: inplement protected feature for routs: create question, quiz are allowed to admin only
 const userRouter = require("./routes/userRoutes.js");
 const quizRouter = require("./routes/quizRouter");
 const lessonsRouter = require("./routes/lessonsRouter");
+
+app.get('/',(req,res,next)=>{
+   res.status(200).json({
+       status:'success',
+       message:'Welcome to Space Odyssey server!'
+   })
+});
 app.use('/users', userRouter);
 app.use('/quiz', quizRouter);
 app.use('/lessons', lessonsRouter);
