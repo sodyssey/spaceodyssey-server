@@ -4,6 +4,8 @@ const Question = require("./../model/questionModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const QuizList = require("../model/quizListModel");
+const authController = require("../controllers/authController");
+
 
 exports.createQuiz = catchAsync(async (req, res, next) => {
     if (!req.body.topic) next(new AppError("Quiz topic not given!", 404));
@@ -72,6 +74,10 @@ exports.giveQuiz = catchAsync(async (req, res, next) => {
 
 //if user already given that quiz, raise error
 exports.submitQuiz = catchAsync(async (req, res, next) => {
+    // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    //     authController.protect(req, res, next);
+    // }
+
     const choosenOptions = req.body.choosenOptions;
     if (!choosenOptions) return next(new AppError("Choosen options not provided", 401))
     const quiz = await Quiz.findById(req.params.quizID).populate('questions');
