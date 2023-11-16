@@ -4,8 +4,34 @@ const Question = require("./../model/questionModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const QuizList = require("../model/quizListModel");
-const authController = require("../controllers/authController");
+const {promisify} = require("util");
+const jwt = require("jsonwebtoken");
 
+
+const addUserToRequest = async (req, res, next) => {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return;
+
+    // verify the token
+    //verify also accepts a callback function, but we will make it return a promise
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    // check if user still exists => to check the case if user has jwt token but the user was deleted!
+    const freshUser = await User.findOne({_id: decoded.id});
+    if (!freshUser) {
+        return next(new AppError("The user belonging to this token does not exist.", 401));
+    }
+
+    // check if user changed password after jwt was issued
+    if (freshUser.changePasswordAfter(decoded.iat)) {
+        return next(new AppError("User recently changed their password! Please login again.", 401));
+    }
+
+    //grant access to the protected rout
+    //also add this user to the request object
+    req.user = freshUser;
+    console.log("user added to the request!");
+}
 
 exports.createQuiz = catchAsync(async (req, res, next) => {
     if (!req.body.topic) next(new AppError("Quiz topic not given!", 404));
@@ -60,7 +86,6 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
 
 });
 
-//todo: if user already given that quiz, raise error
 exports.giveQuiz = catchAsync(async (req, res, next) => {
     const quiz = await Quiz.findById(req.params.quizID).populate('questions', "questionString options");
     if (!quiz) return next(new AppError("This quiz is not available!", 404));
@@ -72,18 +97,18 @@ exports.giveQuiz = catchAsync(async (req, res, next) => {
     });
 });
 
-//if user already given that quiz, raise error
 exports.submitQuiz = catchAsync(async (req, res, next) => {
-    // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    //     authController.protect(req, res, next);
-    // }
+    //adding user to the request if there is a bearer token
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        await addUserToRequest(req, res, next);
+    }
 
     const choosenOptions = req.body.choosenOptions;
-    if (!choosenOptions) return next(new AppError("Choosen options not provided", 401))
+    if (!choosenOptions) return next(new AppError("Choosen options not provided", 400));
     const quiz = await Quiz.findById(req.params.quizID).populate('questions');
     if (!quiz) return next(new AppError("This quiz is not available!", 404));
 
-    if (choosenOptions.length !== quiz.questions.length) return next(new AppError("Answer count invalid!", 401));
+    if (choosenOptions.length !== quiz.questions.length) return next(new AppError("Answer count invalid!", 400));
 
     let correct = 0;
     let i = 0;
@@ -91,11 +116,13 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         if (question.correctOption === choosenOptions[i++]?.toLowerCase()) correct++;
     }
 
-    //todo: check if there is a bearerer token and then call protect etc
     //if there is a user, save it to quizes that user have given
     if (req.user) {
         const user = await User.findById(req.user._id);
         const quizList = await QuizList.findById(user.quizList);
+
+        if (quizList.quizes.map(quiz=>quiz.quiz).includes(quiz._id)) return next(new AppError("You have already given this quiz!",400));
+
         quizList.quizes.push({
             quiz: quiz._id, choosenOptions: choosenOptions, quizMarks: correct, quizDate: Date.now()
         });
@@ -113,12 +140,15 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
 
 //get all the available quizes
 exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
-    //this approach might have scalability issues '>'
+    //adding the user to the request, if there is a user
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        await addUserToRequest(req, res, next);
+    }
+
 
     //get all the quizes available
     let quizes = await Quiz.find().select('topic _id');
 
-    //todo: check if there is a bearerer token and then call protect etc
     //remove quizes that user has given, if any
     if (req.user) {
         const user = await User.findById(req.user._id);
@@ -156,7 +186,7 @@ exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
 
     for (const quiz of quizes) {
         const toAdd = {};
-        toAdd._id=quiz.quiz._id;
+        toAdd._id = quiz.quiz._id;
         toAdd.topic = quiz.quiz.topic;
         toAdd.totalQuestions = quiz.quiz.questions.length;
         toAdd.marksObtained = quiz.quizMarks;
@@ -184,7 +214,7 @@ exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
     for (const quiz of quizes) {
         console.log(quiz);
         const toAdd = {};
-        toAdd._id=quiz.quiz._id;
+        toAdd._id = quiz.quiz._id;
         toAdd.topic = quiz.quiz.topic;
         toAdd.totalQuestions = quiz.quizMarks;
         toAdd.date = quiz.quizDate;
@@ -196,13 +226,6 @@ exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
 });
 
 exports.getParticularSubmittedQuiz = catchAsync(async (req, res, next) => {
-    //topic
-    //date
-    //totalQuestions
-    //marksObtained
-    //allQuestions
-    //selectedOptions
-    //correctOptions
     const user = await User.findById(req.user._id).populate("quizList");
     const quiz = await Quiz.findById(req.params.quizID).populate('questions');
     if (!quiz) return next(new AppError("This quiz is not available!", 404));

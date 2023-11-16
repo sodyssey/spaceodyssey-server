@@ -82,7 +82,7 @@ exports.login = catchAsync(async (req, res, next) => {
     createSendToken(user, 200, res);
 });
 
-exports.protect = catchAsync(async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next,) => {
     let token;
 
     // check if there is a token
