@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
         type: Date
     }, passwordResetToken: String,
     passwordResetExpires: Number,
-    active: Boolean, //todo: on delete, we simply set it to false, don't create JWT for this
+    active: Boolean,
     follows: [String],
     isAdmin: {
         type: Boolean,

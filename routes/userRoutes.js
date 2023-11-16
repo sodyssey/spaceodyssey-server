@@ -11,7 +11,8 @@ router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 router.patch('/updateMyPassword', authController.protect, authController.updateMyPassword);
-router.patch('/updateMe', authController.protect, userController.updateMe);
 router.delete('/deleteMe', authController.protect, userController.deleteMe);
+//todo: updateMe is left for advance
+router.patch('/updateMe', authController.protect, userController.updateMe);
 
 module.exports = router;

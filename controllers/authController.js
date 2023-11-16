@@ -35,9 +35,6 @@ const createSendToken = (user, status, res) => {
 }
 
 exports.signup = catchAsync(async (req, res, next) => {
-    await sendEmail({
-        email: req.body.email, subject: "Welcome to Space Odyssey!", message: "welcome dude '>'"
-    });
 
     const quizList = await QuizList.create({
         quizes: []
@@ -55,8 +52,9 @@ exports.signup = catchAsync(async (req, res, next) => {
     });
 
     //we need a key value for email
+    //todo: you might be a little more creative than simply " welcome dude '>' "
     await sendEmail({
-        email: newUser.email, subject: "Welcome to Space Odyssey!", message: "welcome dude '>'"
+        email: newUser.email, subject: "Welcome to Space Odyssey!", message: "Welcome dude '>'"
     });
 
     //_id is the payload we want to put in jwt
@@ -143,7 +141,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     //send it to user's email
     const resetUrl = `${req.protocol}://${req.get('host')}/users/resetPassword/${resetToken}`;
     const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:
-     ${resetUrl}.\nPlease ignore this message if you didn't forgot the password!.`;
+     ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
 
     try {
         //we need a key value for email
@@ -166,14 +164,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 
-//todo: no user is being found even on valid token
 exports.resetPassword = catchAsync(async (req, res, next) => {
-
     //1. get user based on token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-
-    console.log(hashedToken);
-
     const user = await User.findOne({passwordResetToken: hashedToken, passwordResetExpires: {$gt: Date.now()}});
 
 
@@ -197,8 +190,6 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
     //1. get user from the collection
     //this is only accessable after user login hence req has user
     const user = await User.findById(req.user._id).select('+password');
-    console.log("updateMyPassword user");
-    console.log(user);
 
     //2. check if posted password is correct
     //tho there is supposed to be a user '>'
