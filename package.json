@@ -21,6 +21,7 @@
     "mongoose": "^5.13.20",
     "morgan": "~1.9.1",
     "nodemailer": "^6.9.7",
+    "postmark": "^3.11.0",
     "pug": "2.0.0-beta11",
     "validator": "^13.11.0",
     "xss-clean": "^0.1.4"

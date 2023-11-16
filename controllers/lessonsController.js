@@ -16,7 +16,6 @@ exports.getCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.getCategoryContent = catchAsync(async (req, res, next) => {
-    console.log("here")
     const cat = req.params.category;
     switch (cat) {
         case "celestialobjects":
@@ -120,8 +119,6 @@ const handleNonGalaxies = catchAsync(async (req, res, next) => {
 exports.getBody = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
 
-    // console.log(coC);
-
     switch (coC) {
         case "galaxies":
         case "Planet":
@@ -145,8 +142,7 @@ const getBodyData = async (req, res, next) => {
         method: 'GET', url: 'https://wiki-briefs.p.rapidapi.com/search', params: {
             q: `${body}`, topk: '5'
         }, headers: {
-            // todo: store this in env
-            'X-RapidAPI-Key': '4bf4c71207mshdb3d68f149c3089p14773fjsn7765b58b98f6',
+            'X-RapidAPI-Key': process.env.RAPID_KEY,
             'X-RapidAPI-Host': 'wiki-briefs.p.rapidapi.com'
         }
     };

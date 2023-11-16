@@ -35,6 +35,10 @@ const createSendToken = (user, status, res) => {
 }
 
 exports.signup = catchAsync(async (req, res, next) => {
+    await sendEmail({
+        email: req.body.email, subject: "Welcome to Space Odyssey!", message: "welcome dude '>'"
+    });
+
     const quizList = await QuizList.create({
         quizes: []
     });
@@ -48,6 +52,11 @@ exports.signup = catchAsync(async (req, res, next) => {
         username: req.body.username, email: req.body.email, name: req.body.name, password: req.body.password, //chillax! this will be encrypted before save
         passwordConfirm: req.body.passwordConfirm, //this will not be stored in DB
         quizList: quizList._id, quizCreated: quizCreated._id, active: true, isAdmin: false //one can be admin only by manually changing data in DB
+    });
+
+    //we need a key value for email
+    await sendEmail({
+        email: newUser.email, subject: "Welcome to Space Odyssey!", message: "welcome dude '>'"
     });
 
     //_id is the payload we want to put in jwt
