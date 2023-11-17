@@ -7,12 +7,9 @@ const helmet = require("helmet"); //input safety
 const mongoSanitize = require("express-mongo-sanitize"); //input safety
 const xss = require("xss-clean"); //input safety
 const hpp = require("hpp"); //input safety
-const cors = require("cors"); //prevents cors blockage
 
 //Global Middlewares
 
-//cors
-app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173/"] }));
 //todo: check if limit is a good idea!
 //might need to disable this as our app require a lot of api requests
 //limit 100 api access requests per hour
