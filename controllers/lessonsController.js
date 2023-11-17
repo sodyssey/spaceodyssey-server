@@ -1,8 +1,10 @@
 const AppError = require("../util/appError");
 const axios = require('axios');
 const catchAsync = require("../util/catchAsync");
+const apiReturns = require("./../util/apiReturns");
 
 //todo: format physical data because frontend developer isn't going to
+//todo: return 404 response for all requested info that shall not be entertained
 
 exports.getCategories = catchAsync(async (req, res, next) => {
     res.status(200).json({
@@ -93,7 +95,24 @@ const getEvents = catchAsync((req, res, next) => {
 });
 
 const getMissions = catchAsync((req, res, next) => {
-    // todo: this
+    res.status(200).json({
+        status: "success",
+        data: [
+            {
+                DisplayName: "International Space Station",
+                subHeading: "ISS",
+                image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/ISS(low_res).jpg?alt=media&token=7c13a7ca-e065-4174-a87f-8e6ae9e894bd",
+                id: "ISS"
+            },
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""},
+            {DisplayName: "", subHeading: "", image: "", id: ""}
+        ]
+    });
 });
 
 
@@ -168,34 +187,32 @@ exports.getBody = catchAsync(async (req, res, next) => {
     }
 });
 
-exports.getBodyData = async (req, res, next) => {
+
+const getBodyData = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
-    const body = req.params.body || req.params.event;
+    const body = req.params.body || req.params.event || req.params.mission;
+
+    if (body === 'ISS') {
+        getISS_data(req, res, next);
+        return;
+    }
 
     //get facts
-    const options = {
-        method: 'GET', url: 'https://wiki-briefs.p.rapidapi.com/search', params: {
-            q: `${body}`, topk: '5'
-        }, headers: {
-            'X-RapidAPI-Key': process.env.RAPID_KEY, 'X-RapidAPI-Host': 'wiki-briefs.p.rapidapi.com'
-        }
-    };
-
-
-    let response = await axios.request(options);
+    let response = await apiReturns.wikiBriefs(body, 5);
     const facts = response.data.summary;
     const image = response.data.image;
-    const altBodyName = response.data.url.split('/').pop();
+    const wikiBodyName = response.data.url.split('/').pop();
 
-    response = await axios.get(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${altBodyName}&continue=&format=json&formatversion=2`)
-    const jsonData = await response.data;
+    response = await apiReturns.getWikiExtracts(wikiBodyName);
+    const jsonData = response.data;
     const dataFromWiki = Object.values(jsonData.query.pages)[0];
     const info = dataFromWiki.extract;
 
 
     let physicalData = undefined;
+    let peopleInSpace = undefined;
     if (coC && coC !== "galaxies") {
-        let response = await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
+        let response = await apiReturns.getCelestialPhysicalData(wikiBodyName);
         physicalData = response.data;
     }
 
@@ -204,4 +221,39 @@ exports.getBodyData = async (req, res, next) => {
             image: image, info: info, facts: facts, physicalData: physicalData
         }
     })
-};
+});
+exports.getBodyData = getBodyData;
+
+const getISS_data = catchAsync(async (req, res, next) => {
+    // const response = await apiReturns.wikiBriefs('The International Space Station', '1');
+    // const facts = response.data.summary;
+    res.status(200).json({
+        status: "success",
+        info: "The International Space Station (ISS) is a large, habitable spacecraft that orbits Earth at an average altitude of approximately 420 kilometers (about 261 miles). It serves as a unique and collaborative space laboratory where astronauts and cosmonauts from various countries conduct scientific research and experiments in the microgravity environment of space. The ISS represents one of the most significant achievements in international cooperation in the field of space exploration.",
+        // facts: facts
+    });
+});
+exports.getISS_data = getISS_data;
+
+exports.getPeopleInISS = catchAsync(async (req, res, next) => {
+    let response = await apiReturns.getPeopleInISS();
+    const data = response.data;
+    const peopleInSpace = data.people.map(person => person.name);
+    const toReturn = [];
+
+
+    let i = 0;
+    for (const person of peopleInSpace) {
+        const response = await apiReturns.wikiBriefs(person, 1);
+        toReturn.push({
+            id: i++,
+            person: person,
+            image: response.data.image || null
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: toReturn
+    });
+});
