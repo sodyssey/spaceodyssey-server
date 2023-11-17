@@ -7,5 +7,8 @@ router.route('/').get(lessonsController.getCategories);
 router.route('/:category').get(lessonsController.getCategoryContent);
 router.route('/celestialobjects/:coC').get(lessonsController.getCoContent);
 router.route('/celestialobjects/:coC/:body').get(lessonsController.getBody);
+router.route('/events/:event').get(lessonsController.getBodyData);
+
+
 
 module.exports = router;
