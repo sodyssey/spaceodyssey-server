@@ -1,7 +1,3 @@
-const cors = require("cors"); //prevents cors blockage
-
-app.use(cors());
-
 // things related to server are here '>'
 const path = require("path");
 const dotenv = require("dotenv");

@@ -7,6 +7,17 @@ const helmet = require("helmet"); //input safety
 const mongoSanitize = require("express-mongo-sanitize"); //input safety
 const xss = require("xss-clean"); //input safety
 const hpp = require("hpp"); //input safety
+const cors = require("cors"); //prevents cors blockage
+
+const corsOpts = {
+  origin: "*",
+
+  methods: ["GET", "POST", "PUT", "DELETE"],
+
+  allowedHeaders: ["Content-Type"],
+};
+
+app.use(cors(corsOpts));
 
 //Global Middlewares
 
