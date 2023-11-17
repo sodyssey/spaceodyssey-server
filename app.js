@@ -7,9 +7,12 @@ const helmet = require("helmet"); //input safety
 const mongoSanitize = require("express-mongo-sanitize"); //input safety
 const xss = require("xss-clean"); //input safety
 const hpp = require("hpp"); //input safety
+const cors = require("cors"); //prevents cors blockage
 
 //Global Middlewares
 
+//cors
+app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173/"] }));
 //todo: check if limit is a good idea!
 //might need to disable this as our app require a lot of api requests
 //limit 100 api access requests per hour
@@ -23,7 +26,7 @@ const hpp = require("hpp"); //input safety
 // app.use(helmet());
 
 // read data from the body into req.body, max is 10kb.
-app.use(express.json({limit: '10kb'})); //data from body shall be added to req
+app.use(express.json({ limit: "10kb" })); //data from body shall be added to req
 
 //sanitize against non SQL code injection
 // app.use(mongoSanitize());
@@ -44,36 +47,41 @@ app.use(express.json({limit: '10kb'})); //data from body shall be added to req
 
 //adding the request time to req object
 app.use((req, res, next) => {
-    req.requestTime = new Date().toISOString();
-    // console.log(req.headers);
-    next();
+  req.requestTime = new Date().toISOString();
+  // console.log(req.headers);
+  next();
 });
 
 //development dependency, logs the recent request in the console
-if (process.env.NODE_ENV === 'development') app.use(morgan('dev')); //only log api calls to the console when in development mode!
+if (process.env.NODE_ENV === "development") app.use(morgan("dev")); //only log api calls to the console when in development mode!
 
 const userRouter = require("./routes/userRoutes.js");
 const quizRouter = require("./routes/quizRouter");
 const lessonsRouter = require("./routes/lessonsRouter");
 
-app.get('/',(req,res,next)=>{
-   res.status(200).json({
-       status:'success',
-       message:'Welcome to Space Odyssey server!'
-   })
+app.get("/", (req, res, next) => {
+  res.status(200).json({
+    status: "success",
+    message: "Welcome to Space Odyssey server!",
+  });
 });
-app.use('/users', userRouter);
-app.use('/quiz', quizRouter);
-app.use('/lessons', lessonsRouter);
+app.use("/users", userRouter);
+app.use("/quiz", quizRouter);
+app.use("/lessons", lessonsRouter);
 
 //for undefined routs
-const AppError = require('./util/appError');
-app.all('*', (req, res, next) => {
-    next(new AppError(`Can't find ${req.originalUrl} on the server! and its spaceOdyssey`, 404));
+const AppError = require("./util/appError");
+app.all("*", (req, res, next) => {
+  next(
+    new AppError(
+      `Can't find ${req.originalUrl} on the server! and its spaceOdyssey`,
+      404
+    )
+  );
 });
 
 //in case of operational error this middleware function will be called
-const globalErrorController = require('./controllers/errorController');
+const globalErrorController = require("./controllers/errorController");
 app.use(globalErrorController);
 
 module.exports = app;
