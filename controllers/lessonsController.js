@@ -5,6 +5,7 @@ const apiReturns = require("./../util/apiReturns");
 
 //todo: format physical data because frontend developer isn't going to
 //todo: return 404 response for all requested info that shall not be entertained
+//todo: normalize the code
 
 exports.getCategories = catchAsync(async (req, res, next) => {
     res.status(200).json({
@@ -13,7 +14,6 @@ exports.getCategories = catchAsync(async (req, res, next) => {
         }, {DisplayName: "Missions", id: "missions"}]
     });
 });
-
 exports.getCategoryContent = catchAsync(async (req, res, next) => {
     const cat = req.params.category;
     switch (cat) {
@@ -30,7 +30,6 @@ exports.getCategoryContent = catchAsync(async (req, res, next) => {
             return next(new AppError("There is no such category!", 400));
     }
 })
-
 const getCelestialObjects = (req, res, next) => {
     res.status(200).json({
         status: 'success', data: [{DisplayName: "Planets", id: "Planet"}, {DisplayName: "Stars", id: "Star"}, {
@@ -40,7 +39,6 @@ const getCelestialObjects = (req, res, next) => {
         }, {DisplayName: "Galaxies", id: "galaxies"}]
     });
 }
-
 const getEvents = (req, res, next) => {
 
     res.status(200).json({
@@ -93,7 +91,6 @@ const getEvents = (req, res, next) => {
     });
 
 };
-
 const getMissions = (req, res, next) => {
     res.status(200).json({
         status: "success", data: [{
@@ -134,8 +131,6 @@ const getMissions = (req, res, next) => {
         }]
     });
 };
-
-
 exports.getCoContent = catchAsync(async (req, res, next) => {
 
     const coC = req.params.coC;
@@ -155,7 +150,6 @@ exports.getCoContent = catchAsync(async (req, res, next) => {
     }
 
 });
-
 const handleGalaxies = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success', data: [{englishName: "Milky Way", id: "Milky_Way"}, {
@@ -173,8 +167,6 @@ const handleGalaxies = catchAsync(async (req, res, next) => {
         }]
     });
 })
-
-
 const handleNonGalaxies = catchAsync(async (req, res, next) => {
 
     const coC = req.params.coC;
@@ -188,8 +180,6 @@ const handleNonGalaxies = catchAsync(async (req, res, next) => {
     });
 
 });
-
-
 exports.getBody = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
 
@@ -206,8 +196,6 @@ exports.getBody = catchAsync(async (req, res, next) => {
             return next(new AppError("No such celestial Object.", 400));
     }
 });
-
-
 const getBodyData = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
     const body = req.params.body || req.params.event || req.params.mission;
@@ -219,6 +207,7 @@ const getBodyData = catchAsync(async (req, res, next) => {
 
     //get facts
     let response = await apiReturns.wikiBriefs(body, 5);
+    const englishName = response.data.title;
     const facts = response.data.summary;
     const image = response.data.image;
     const wikiBodyName = response.data.url.split('/').pop();
@@ -242,12 +231,16 @@ const getBodyData = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: "success", data: {
-            image: image, info: info, facts: facts, physicalData: physicalData, marsAdditional: marsRoverAdditional
+            englishName: englishName,
+            image: image,
+            info: info,
+            facts: facts,
+            physicalData: physicalData,
+            marsAdditional: marsRoverAdditional
         }
     })
 });
 exports.getBodyData = getBodyData;
-
 const getISS_data = catchAsync(async (req, res, next) => {
 
     const response = await apiReturns.wikiBriefs('The International Space Station', '3');
@@ -258,9 +251,6 @@ const getISS_data = catchAsync(async (req, res, next) => {
         facts: facts.slice(1) //the first entry is log=> api bugging
     });
 });
-// exports.getISS_data = getISS_data;
-
-
 exports.getPeopleInISS = catchAsync(async (req, res, next) => {
     let response = await apiReturns.getPeopleInISS();
     const data = response.data;
@@ -280,7 +270,6 @@ exports.getPeopleInISS = catchAsync(async (req, res, next) => {
         status: 'success', data: toReturn
     });
 });
-
 exports.getMarsImages = catchAsync(async (req, res, next) => {
     //todo: might need to check the date format
     const date = req.params.date;

@@ -10,11 +10,11 @@ const hpp = require("hpp"); //input safety
 const cors = require("cors"); //prevents cors blockage
 
 const corsOpts = {
-  origin: "*",
+    origin: "*",
 
-  methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
 
-  allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type"],
 };
 
 app.use(cors(corsOpts));
@@ -34,7 +34,7 @@ app.use(cors(corsOpts));
 // app.use(helmet());
 
 // read data from the body into req.body, max is 10kb.
-app.use(express.json({ limit: "10kb" })); //data from body shall be added to req
+app.use(express.json({limit: "10kb"})); //data from body shall be added to req
 
 //sanitize against non SQL code injection
 // app.use(mongoSanitize());
@@ -55,9 +55,9 @@ app.use(express.json({ limit: "10kb" })); //data from body shall be added to req
 
 //adding the request time to req object
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.headers);
-  next();
+    req.requestTime = new Date().toISOString();
+    // console.log(req.headers);
+    next();
 });
 
 //development dependency, logs the recent request in the console
@@ -66,26 +66,28 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev")); //only log a
 const userRouter = require("./routes/userRoutes.js");
 const quizRouter = require("./routes/quizRouter");
 const lessonsRouter = require("./routes/lessonsRouter");
+const newsRouter = require("./routes/newsRouter");
 
 app.get("/", (req, res, next) => {
-  res.status(200).json({
-    status: "success",
-    message: "Welcome to Space Odyssey server!",
-  });
+    res.status(200).json({
+        status: "success",
+        message: "Welcome to Space Odyssey server!",
+    });
 });
 app.use("/users", userRouter);
 app.use("/quiz", quizRouter);
 app.use("/lessons", lessonsRouter);
+app.use("/news", newsRouter);
 
 //for undefined routs
 const AppError = require("./util/appError");
 app.all("*", (req, res, next) => {
-  next(
-    new AppError(
-      `Can't find ${req.originalUrl} on the server! and its spaceOdyssey`,
-      404
-    )
-  );
+    next(
+        new AppError(
+            `Can't find ${req.originalUrl} on the server! and its spaceOdyssey`,
+            404
+        )
+    );
 });
 
 //in case of operational error this middleware function will be called
