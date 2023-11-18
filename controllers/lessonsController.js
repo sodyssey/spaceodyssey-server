@@ -41,7 +41,7 @@ const getCelestialObjects = (req, res, next) => {
     });
 }
 
-const getEvents = catchAsync((req, res, next) => {
+const getEvents = (req, res, next) => {
 
     res.status(200).json({
         status: "success", data: [{
@@ -92,28 +92,48 @@ const getEvents = catchAsync((req, res, next) => {
         }]
     });
 
-});
+};
 
-const getMissions = catchAsync((req, res, next) => {
+const getMissions = (req, res, next) => {
     res.status(200).json({
-        status: "success",
-        data: [
-            {
-                DisplayName: "International Space Station",
-                subHeading: "ISS",
-                image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/ISS(low_res).jpg?alt=media&token=7c13a7ca-e065-4174-a87f-8e6ae9e894bd",
-                id: "ISS"
-            },
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""},
-            {DisplayName: "", subHeading: "", image: "", id: ""}
-        ]
+        status: "success", data: [{
+            DisplayName: "International Space Station",
+            subHeading: "ISS",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/ISS(low_res).jpg?alt=media&token=7c13a7ca-e065-4174-a87f-8e6ae9e894bd",
+            id: "ISS"
+        }, {
+            DisplayName: "Mars Rover",
+            subHeading: "Mars's autonomous exploration vehicles",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/marsRover.jpg?alt=media&token=bfc5fffa-3aec-4982-82b9-ce7a2ae3bd2b",
+            id: "Mars_rover"
+        }, {DisplayName: "Apollo 11", subHeading: "1969", image: "", id: "Apollo_11"}, {
+            DisplayName: "Voyager 1 and 2 ",
+            subHeading: "1977",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/voyager.jpg?alt=media&token=47cd84dc-ace7-41b4-b32f-2f261192face",
+            id: "Voyager_program"
+        }, {
+            DisplayName: "Hubble Space Telescope",
+            subHeading: "1990",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/hubble.jpeg?alt=media&token=badcea3b-05c9-4fff-8342-3c3b5eb5448c",
+            id: "Hubble_Space_Telescope"
+        }, {
+            DisplayName: "Cassini-Huygens",
+            subHeading: "997-2017",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/cassini.jpg?alt=media&token=80cc040a-8ef5-45e0-878e-d40261d877db",
+            id: "Cassini–Huygens"
+        }, {
+            DisplayName: "New Horizons",
+            subHeading: "2006",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/New_Horizons_spacecraft_model_1.png?alt=media&token=243aede0-8a6d-4f9f-b08d-75578ad28e43",
+            id: "New_Horizons"
+        }, {
+            DisplayName: "SpaceX Crew Dragon Demo-2",
+            subHeading: "2020",
+            image: "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/crewDragon.jpg?alt=media&token=d557974f-d491-44c0-af8d-f883c9d2556c",
+            id: "Crew_Dragon_Demo-2"
+        }]
     });
-});
+};
 
 
 exports.getCoContent = catchAsync(async (req, res, next) => {
@@ -210,30 +230,36 @@ const getBodyData = catchAsync(async (req, res, next) => {
 
 
     let physicalData = undefined;
-    let peopleInSpace = undefined;
     if (coC && coC !== "galaxies") {
-        let response = await apiReturns.getCelestialPhysicalData(wikiBodyName);
+        response = await apiReturns.getCelestialPhysicalData(wikiBodyName);
         physicalData = response.data;
+    }
+    let marsRoverAdditional = undefined;
+    if (body === 'Mars_rover') {
+        response = await apiReturns.getMarsRoverAdditionalData();
+        marsRoverAdditional = response;
     }
 
     res.status(200).json({
         status: "success", data: {
-            image: image, info: info, facts: facts, physicalData: physicalData
+            image: image, info: info, facts: facts, physicalData: physicalData, marsAdditional: marsRoverAdditional
         }
     })
 });
 exports.getBodyData = getBodyData;
 
 const getISS_data = catchAsync(async (req, res, next) => {
-    // const response = await apiReturns.wikiBriefs('The International Space Station', '1');
-    // const facts = response.data.summary;
+
+    const response = await apiReturns.wikiBriefs('The International Space Station', '3');
+    const facts = response.data.summary;
     res.status(200).json({
         status: "success",
         info: "The International Space Station (ISS) is a large, habitable spacecraft that orbits Earth at an average altitude of approximately 420 kilometers (about 261 miles). It serves as a unique and collaborative space laboratory where astronauts and cosmonauts from various countries conduct scientific research and experiments in the microgravity environment of space. The ISS represents one of the most significant achievements in international cooperation in the field of space exploration.",
-        // facts: facts
+        facts: facts.slice(1) //the first entry is log=> api bugging
     });
 });
-exports.getISS_data = getISS_data;
+// exports.getISS_data = getISS_data;
+
 
 exports.getPeopleInISS = catchAsync(async (req, res, next) => {
     let response = await apiReturns.getPeopleInISS();
@@ -246,14 +272,21 @@ exports.getPeopleInISS = catchAsync(async (req, res, next) => {
     for (const person of peopleInSpace) {
         const response = await apiReturns.wikiBriefs(person, 1);
         toReturn.push({
-            id: i++,
-            person: person,
-            image: response.data.image || null
+            id: i++, person: person, image: response.data.image || null
         });
     }
 
     res.status(200).json({
-        status: 'success',
-        data: toReturn
+        status: 'success', data: toReturn
     });
+});
+
+exports.getMarsImages = catchAsync(async (req, res, next) => {
+    //todo: might need to check the date format
+    const date = req.params.date;
+    const photos = await apiReturns.getMarsImages(date);
+    res.status(200).json({
+        status: 'success', length: photos.length, photos: photos
+    });
+
 });

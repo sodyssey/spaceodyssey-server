@@ -10,6 +10,7 @@ router.route('/celestialobjects/:coC/:body').get(lessonsController.getBody);
 router.route('/events/:event').get(lessonsController.getBodyData);
 router.route('/missions/:mission').get(lessonsController.getBodyData);
 router.route('/missions/ISS/peopleInSpace').get(lessonsController.getPeopleInISS);
+router.route('/missions/Mars_rover/:date').get(lessonsController.getMarsImages);
 
 
 
