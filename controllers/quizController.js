@@ -4,19 +4,16 @@ const Question = require("./../model/questionModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const QuizList = require("../model/quizListModel");
-const {promisify} = require("util");
-const jwt = require("jsonwebtoken");
-const authControlelr = require("./authController");
+const authController = require("./authController");
 
-
+//admin can create a quiz
 exports.createQuiz = catchAsync(async (req, res, next) => {
-    if (!req.body.topic) next(new AppError("Quiz topic not given!", 404));
+    if (!req.body.topic) next(new AppError("Quiz topic not given!", 400));
     //1. create all questions
     const questionsSoFar = [];
     let index = 0;
     for (const question of req.body.questions) {
         try {
-            console.log(question);
             const ques = await Question.create({
                 questionString: question.questionString,
                 options: question.options,
@@ -48,9 +45,11 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
     //4. add that quiz to quizCreated list
     const user = await User.findById(req.user._id);
     const quizCreated = await QuizList.findById(user.quizCreated);
+    //we want to add new quiz in the beginning of quizCreated array, so we dont have to sort when displaying
     quizCreated.quizes.unshift({
         quiz: newQuiz._id, choosenOptions: undefined, //because we are creating a quiz
-        quizMarks: index, quizDate: Date.now()
+        quizMarks: index, //it stands for total number of question
+        quizDate: Date.now()
     });
     await quizCreated.save();
 
@@ -62,6 +61,7 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
 
 });
 
+//returns a quiz data so that user can give it
 exports.giveQuiz = catchAsync(async (req, res, next) => {
     const quiz = await Quiz.findById(req.params.quizID).populate('questions', "questionString options");
     if (!quiz) return next(new AppError("This quiz is not available!", 404));
@@ -73,10 +73,13 @@ exports.giveQuiz = catchAsync(async (req, res, next) => {
     });
 });
 
+//submit a quiz =>
+// if user is logged in => add the quiz to his quizList and return result
+// if no user, simply return result
 exports.submitQuiz = catchAsync(async (req, res, next) => {
     //adding user to the request if there is a bearer token
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        await authControlelr.addUserToRequest(req, res, next);
+        await authController.addUserToRequest(req, res, next);
     }
 
     const choosenOptions = req.body.choosenOptions;
@@ -97,7 +100,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
         const user = await User.findById(req.user._id);
         const quizList = await QuizList.findById(user.quizList);
 
-        if (quizList.quizes.map(quiz => quiz.quiz).includes(quiz._id)) return next(new AppError("You have already given this quiz!", 400));
+        if (quizList.quizes.map(quiz => quiz.quiz).includes(quiz._id)) return next(new AppError("You have already given this quiz!", 403));
 
         quizList.quizes.push({
             quiz: quiz._id, choosenOptions: choosenOptions, quizMarks: correct, quizDate: Date.now()
@@ -118,9 +121,8 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
 exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     //adding the user to the request, if there is a user
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        await authControlelr.addUserToRequest(req, res, next);
+        await authController.addUserToRequest(req, res, next);
     }
-
 
     //get all the quizes available
     let quizes = await Quiz.find().select('topic _id');
@@ -134,14 +136,19 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     }
 
     //skip appropriate number of quizes
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 10;
-    const skip = (page - 1) * limit;
-    quizes = quizes.slice(skip, skip + limit);
+    //per page 20 quizes
+    const offset = req.params.offset * 1 || 0;
+    let loadMore = null;
+    if (offset + 20 < quizes.length) loadMore = `/quiz/getQuizes/${offset + 20}`
+    quizes = quizes.slice(offset, offset + 20);
 
     //return the remaining
+
     res.status(200).json({
-        status: "success", length: quizes.length, data: {
+        status: "success",
+        data: {
+            length: quizes.length,
+            loadMore: loadMore,
             quizes: quizes
         }
     });
@@ -151,14 +158,16 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
 exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
     //this approach might have scalability issues '>'
     const user = await User.findById(req.user._id);
-    const data = [];
+    const quizesSubmitted = [];
     const quizesGiven = await QuizList.findById(user.quizList).populate("quizes.quiz");
     let quizes = quizesGiven.quizes;
 
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 10;
-    const skip = (page - 1) * limit;
-    quizes = quizes.slice(skip, skip + limit);
+    //skip appropriate number of quizes
+    //per page 20 quizes
+    const offset = req.params.offset * 1 || 0;
+    let loadMore = null;
+    if (offset + 20 < quizes.length) loadMore = `/quiz/getSubmittedQuizes/${offset + 20}`
+    quizes = quizes.slice(offset, offset + 20);
 
     for (const quiz of quizes) {
         const toAdd = {};
@@ -167,10 +176,14 @@ exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
         toAdd.totalQuestions = quiz.quiz.questions.length;
         toAdd.marksObtained = quiz.quizMarks;
         toAdd.date = quiz.quizDate;
-        data.push(toAdd);
+        quizesSubmitted.push(toAdd);
     }
     res.status(200).json({
-        status: "success", length: data.length, data: data
+        status: "success", data: {
+            length: quizesSubmitted.length,
+            loadMore,
+            quizesSubmitted
+        }
     });
 });
 
@@ -178,26 +191,32 @@ exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
 exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
     //this approach might have scalability issues '>'
     const user = await User.findById(req.user._id);
-    const data = [];
-    const quizesCreated = await QuizList.findById(user.quizCreated).populate("quizes.quiz");
-    let quizes = quizesCreated.quizes;
+    const quizesCreated = [];
+    const quizesCreatedRaw = await QuizList.findById(user.quizCreated).populate("quizes.quiz");
+    let quizes = quizesCreatedRaw.quizes;
 
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 10;
-    const skip = (page - 1) * limit;
-    quizes = quizes.slice(skip, skip + limit);
+    //skip appropriate number of quizes
+    //per page 20 quizes
+    const offset = req.params.offset * 1 || 0;
+    let loadMore = null;
+    if (offset + 20 < quizes.length) loadMore = `/quiz/getCreatedQuizes/${offset + 20}`
+    quizes = quizes.slice(offset, offset + 20);
+
 
     for (const quiz of quizes) {
-        console.log(quiz);
         const toAdd = {};
         toAdd._id = quiz.quiz._id;
         toAdd.topic = quiz.quiz.topic;
         toAdd.totalQuestions = quiz.quizMarks;
         toAdd.date = quiz.quizDate;
-        data.push(toAdd);
+        quizesCreated.push(toAdd);
     }
     res.status(200).json({
-        status: "success", length: data.length, data: data
+        status: "success", data: {
+            length: quizesCreated.length,
+            loadMore,
+            quizesCreated
+        }
     });
 });
 
@@ -208,14 +227,9 @@ exports.getParticularSubmittedQuiz = catchAsync(async (req, res, next) => {
 
     let quizDataFromUser = null;
     for (const obj of user.quizList.quizes) {
-        console.log(obj.quiz);
-        console.log(quiz._id);
-        console.log(`${obj.quiz}` === `${quiz._id}`)
         if (`${obj.quiz}` === `${quiz._id}`) quizDataFromUser = obj;
         if (quizDataFromUser) break;
     }
-
-    console.log(quizDataFromUser);
 
     if (!quizDataFromUser) return next(new AppError("You have not given this quiz", 400));
 
@@ -228,8 +242,7 @@ exports.getParticularSubmittedQuiz = catchAsync(async (req, res, next) => {
     data.choosenOptions = quizDataFromUser.choosenOptions;
 
     res.status(200).json({
-        status: 'success',
-        data: data
+        status: 'success', data: data
     });
 });
 
@@ -254,8 +267,7 @@ exports.getParticularCreatedQuiz = catchAsync(async (req, res, next) => {
     data.questionAndCorrectAnswers = quiz.questions;
 
     res.status(200).json({
-        status: 'success',
-        data: data
+        status: 'success', data: data
     });
 });
 
