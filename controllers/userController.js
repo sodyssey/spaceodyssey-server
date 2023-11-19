@@ -2,6 +2,7 @@ const User = require("./../model/userModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 
+//only keeps allowedFields in obj
 filterObj = (obj, ...allowedFields) => {
     const newObj = {};
     Object.keys(obj).forEach(el => {
@@ -10,7 +11,7 @@ filterObj = (obj, ...allowedFields) => {
     return newObj;
 }
 
-
+//let name, avatar, follows of a user get updated
 const updateMe = catchAsync(async (req, res, next) => {
     //1. if trying to update password, raise an error
     if (req.body.password || req.body.passwordConfirm)
@@ -22,7 +23,6 @@ const updateMe = catchAsync(async (req, res, next) => {
     //using findByIdAndUpdate instead of typical user.save() because we are not working with passwords and no need to complicate stuff
     //new: true=> send the updated user
     const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {new: true, runValidators: true});
-
 
     res.status(200).json({
         status: 'success',
@@ -37,7 +37,9 @@ exports.addFollows = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     const follows = user.follows;
     const sa = req.params.sa;
-    follows.push(sa);
+
+    if (follows.indexOf(sa) < 0) //if this space agency is not in follows
+        follows.push(sa);
     req.body.follows = follows; //because we are going to call updateMe
     await updateMe(req, res, next);
 };
@@ -47,18 +49,15 @@ exports.removeFollows = async (req, res, next) => {
     const follows = user.follows;
     const sa = req.params.sa;
     const index = follows.indexOf(sa);
-    if (index > -1) {
+    if (index > -1)
         follows.splice(index, 1);
-    }
     req.body.follows = follows; //because we are going to call updateMe
     await updateMe(req, res, next);
 };
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-    //why are we not asking for password confirm?
-
     //1. get user from the collection
-    //this is only accessable after user login hence req has user
+    //this is only accessible after user login hence req has user
     let user = await User.findById(req.user._id).select('+password');
 
     //2. check if posted password is correct

@@ -95,10 +95,15 @@ userSchema.pre(/^find/, function (next) {
 userSchema.methods.createPasswordResetToken = function () {
     //we cant simply store resetToken as it is into the database due to security issues
     const resetToken = crypto.randomBytes(32).toString('hex');
-    //the following two will be stored instead
+
+    //we will store the hashed token instead
+    //we will send this original resetToken to user on email
+    //when user will give us this token, we will hash this token and compare it with the one stored in the database
+
     //the next line will update the resetToken
     this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     this.passwordResetExpires = Date.now() + (10 * 60 * 1000); //valid for 10 minutes
+
     //we have not 'saved' this user document yet, that will be done in the resetPassword function
     //that is supposed to call createPasswordResetToken
     return resetToken;

@@ -4,27 +4,28 @@ const AppError = require("../util/appError");
 const {promisify} = require('util');
 const sendEmail = require("../util/email");
 const crypto = require("crypto");
-const bcryptjs = require("bcryptjs");
 const QuizList = require("../model/quizListModel");
 const User = require("../model/userModel");
 
+//returns a jwt token created using given id
 const signToken = (id) => {
     return jwt.sign({id: id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});
 }
 
+
+//creates a jwt token using user's _id, put it into a cookie and send it as
+//todo: learn how and what to work with cookie
 const createSendToken = (user, status, res) => {
     const token = signToken(user._id);
 
     //we gonna set a cookie :3
     const cookieOptions = {
-        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-        httpOnly: true, // secure: true //this shall be uncommented while in production
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000), httpOnly: true, // secure: true //this shall be uncommented while in production
     }
-
     res.cookie('jwt', token, cookieOptions);
 
 
-    //hide password
+    //hide password as we are not 'selecting' user == password is still in user object
     user.password = undefined;
 
     res.status(status).json({
@@ -52,13 +53,14 @@ exports.signup = catchAsync(async (req, res, next) => {
     });
 
     //we need a key value for email
-    //todo: you might be a little more creative than simply " welcome dude '>' "
     await sendEmail({
-        email: newUser.email, subject: "Welcome to Space Odyssey!", message: "Welcome dude '>'"
+        email: newUser.email, subject: "Welcome to Space Odyssey!", message: `
+        Dear ${newUser.name},\nWelcome to Space Odyssey! We are excited to have you as a member of our community.\nSpace Odyssey is a website that provides users with a way to explore celestial body data, take quizzes, and explore news related to space. We believe that space is an amazing and fascinating place, and we want to make it accessible to everyone.
+        \nWe hope that you will enjoy using Space Odyssey. Please let us know if you have any questions or suggestions.\nSincerely,
+        \nThe Space Odyssey Team`
     });
 
     //_id is the payload we want to put in jwt
-    // this token will expire after process.enc.JWT_EXPIRES_IN time, that is 90days in our case
     createSendToken(newUser, 201, res);
 });
 
@@ -82,6 +84,8 @@ exports.login = catchAsync(async (req, res, next) => {
     createSendToken(user, 200, res);
 });
 
+//makes sure that user is logged in == has a valid bearer token
+//if all is good, that user is added to the req
 exports.protect = catchAsync(async (req, res, next,) => {
     let token;
 
@@ -90,11 +94,10 @@ exports.protect = catchAsync(async (req, res, next,) => {
         token = req.headers.authorization.split(' ')[1];
     }
 
-    console.log(token);
-
     if (!token) {
         return next(new AppError("You are not logged in! Please log in again.", 401));
     }
+
     // verify the token
     //verify also accepts a callback function, but we will make it return a promise
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
@@ -116,16 +119,17 @@ exports.protect = catchAsync(async (req, res, next,) => {
     next();
 });
 
+//
 exports.restrictToAdmin = (req, res, next) => {
     if (!req.user.isAdmin) {
-        return next(new AppError('You dont have permission to perform this action!', 403));
+        return next(new AppError('You dont have permission to perform this action!', 401));
     }
     next();
 }
 
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
-
+    //protected function will be called before this, so req is supposed to have user
     //get user based on posted email
     const user = await User.findOne({email: req.body.email});
     if (!user) {
@@ -134,17 +138,17 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     //generate token
     const resetToken = user.createPasswordResetToken();
-    //validation is false because we are not giving, for example a confirm password
+    //validation is set false because we are not giving, for example a confirm password
+    //so save without validation
     await user.save({validateBeforeSave: false});
 
 
     //send it to user's email
     const resetUrl = `${req.protocol}://${req.get('host')}/users/resetPassword/${resetToken}`;
-    const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:
+    const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:\n
      ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
 
     try {
-        //we need a key value for email
         await sendEmail({
             email: user.email, subject: "Reset password token. Valid for 10 min only!", message: message
         });
@@ -153,20 +157,20 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
             status: 'success', message: 'Token sent to email'
         })
     } catch (err) {
+        //if failed to send the email, set these fields to undefined
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
         await user.save({validateBeforeSave: false});
-        console.log(err);
         return next(new AppError('There was an error sending you email! Please try again later!', 500));
     }
-
-
 });
 
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
     //1. get user based on token
+    //we stored hashed resetToken in database, so hash the resetToken that user gave to compare
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    //get user based on the resetToken and also make sure that token is not expired yet
     const user = await User.findOne({passwordResetToken: hashedToken, passwordResetExpires: {$gt: Date.now()}});
 
 
@@ -176,23 +180,23 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    await user.save();
+    await user.save(); //pre save functions will check if password and confirm password matches
 
     //3. updated password changed property of user
     //done in pre('save'.... middleware in userModel
 
     //4. log the user in, send jwt
     createSendToken(user, 200, res);
-
 });
 
+
+//user can change his password
 exports.updateMyPassword = catchAsync(async (req, res, next) => {
     //1. get user from the collection
-    //this is only accessable after user login hence req has user
+    //this is only accessible after user login => req has user object
     const user = await User.findById(req.user._id).select('+password');
 
     //2. check if posted password is correct
-    //tho there is supposed to be a user '>'
     if (!user || !(await user.correctPassword(req.body.password, user.password))) {
         return next(new AppError("Incorrect email or password!", 401));
     }
@@ -200,15 +204,15 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
     //3. update password
     user.password = req.body.newPassword;
     user.passwordConfirm = req.body.passwordConfirm;
-    console.log("updateMyPassword save is to be called next")
     await user.save();
-    console.log(user);
 
     //4. log in using new password
     createSendToken(user, 200, res);
-
 });
 
+
+//we have certain routs where having user logged in is optional, so this function will be used to add user to the req
+//if there is a valid bearer token. if there is no token, the function will simply return and do nothing
 exports.addUserToRequest = async (req, res, next) => {
     const token = req.headers.authorization.split(' ')[1];
     if (!token) return;
@@ -231,5 +235,4 @@ exports.addUserToRequest = async (req, res, next) => {
     //grant access to the protected rout
     //also add this user to the request object
     req.user = freshUser;
-    console.log("user added to the request!");
 }
