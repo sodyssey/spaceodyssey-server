@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const validator = require("validator");
+const validator = require("validator"); //provides various schema validators
 const bcryptjs = require("bcryptjs");
 
 //todo: add some validators too

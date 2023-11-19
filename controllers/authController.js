@@ -139,7 +139,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 
     //send it to user's email
-    //todo: check if this creats frontend url '>'
     const resetUrl = `${req.protocol}://${req.get('host')}/users/resetPassword/${resetToken}`;
     const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:
      ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
