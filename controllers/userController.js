@@ -11,13 +11,13 @@ filterObj = (obj, ...allowedFields) => {
 }
 
 
-exports.updateMe = async (req, res, next) => {
+const updateMe = catchAsync(async (req, res, next) => {
     //1. if trying to update password, raise an error
     if (req.body.password || req.body.passwordConfirm)
         return next(new AppError('This route is not for password reset. please go to /updateMyPassword', 400));
 
     //2. update otherwise
-    //we want to let user change name and email only, hence filter out unwanted fields
+    //we want to let user change name, avatar, follows only, hence filter out unwanted fields
     const filteredBody = filterObj(req.body, 'name', 'avatar', 'follows');
     //using findByIdAndUpdate instead of typical user.save() because we are not working with passwords and no need to complicate stuff
     //new: true=> send the updated user
@@ -30,6 +30,28 @@ exports.updateMe = async (req, res, next) => {
             user: updatedUser
         }
     });
+});
+
+exports.addFollows = async (req, res, next) => {
+    //todo: duplication potential exists
+    const user = await User.findById(req.user._id);
+    const follows = user.follows;
+    const sa = req.params.sa;
+    follows.push(sa);
+    req.body.follows = follows; //because we are going to call updateMe
+    await updateMe(req, res, next);
+};
+
+exports.removeFollows = async (req, res, next) => {
+    const user = await User.findById(req.user._id);
+    const follows = user.follows;
+    const sa = req.params.sa;
+    const index = follows.indexOf(sa);
+    if (index > -1) {
+        follows.splice(index, 1);
+    }
+    req.body.follows = follows; //because we are going to call updateMe
+    await updateMe(req, res, next);
 };
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
@@ -40,7 +62,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     let user = await User.findById(req.user._id).select('+password');
 
     //2. check if posted password is correct
-    if (!user ||!req.body.password || !(await user.correctPassword(req.body.password, user.password))) {
+    if (!user || !req.body.password || !(await user.correctPassword(req.body.password, user.password))) {
         return next(new AppError("Incorrect password!", 401));
     }
 

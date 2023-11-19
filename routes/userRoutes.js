@@ -12,7 +12,7 @@ router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 router.patch('/updateMyPassword', authController.protect, authController.updateMyPassword);
 router.delete('/deleteMe', authController.protect, userController.deleteMe);
-//todo: updateMe is left for advance
-router.patch('/updateMe', authController.protect, userController.updateMe);
+router.patch('/addFollows/:sa', authController.protect, userController.addFollows);
+router.patch('/removeFollows/:sa', authController.protect, userController.removeFollows);
 
 module.exports = router;

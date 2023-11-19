@@ -23,15 +23,10 @@ const userSchema = new mongoose.Schema({
         required: [true, "A user must have a username"],
         minLength: [5, "name too short(min=5)!"],
         maxLength: [15, "name too long(max=15)!"]
-    },
-    avatar: String,
-    quizList: { //can a admin give quize?
-        type: mongoose.Schema.ObjectId,
-        ref: 'QuizList'
-    },
-    quizCreated: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'QuizList'
+    }, avatar: String, quizList: { //can a admin give quize?
+        type: mongoose.Schema.ObjectId, ref: 'QuizList'
+    }, quizCreated: {
+        type: mongoose.Schema.ObjectId, ref: 'QuizList'
     }, password: {
         type: String, required: [true, "Please create a password!"], minlength: 8, select: false //do not select this ever
     }, passwordConfirm: {
@@ -46,10 +41,13 @@ const userSchema = new mongoose.Schema({
     }, passwordResetToken: String,
     passwordResetExpires: Number,
     active: Boolean,
-    follows: [String],
-    isAdmin: {
-        type: Boolean,
-        default: false
+    follows: [{
+        type: String, enum: {
+            values: ["NASA", "ESA", "Roscosmos", "CNSA", "ISRO", "JAXA", "CSA", "UK Space Agency", "ASAL", "CONAE", "ISA", "KARI", "UAE Space Agency", "Israel Space Agency", "NSAU",],
+            message: "Can't follow this agency."
+        }
+    }], isAdmin: {
+        type: Boolean, default: false
     }
 });
 
@@ -83,7 +81,6 @@ userSchema.pre('save', function (next) {
     //sometimes saving to database is slow
     // , so ... decreasing 10 second so it not to create any problem while loging in using token
     this.passwordChangedAt = Date.now() - 10000;
-    console.log("pre save 2 ended");
     next();
 });
 

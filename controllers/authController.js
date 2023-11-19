@@ -139,6 +139,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 
     //send it to user's email
+    //todo: check if this creats frontend url '>'
     const resetUrl = `${req.protocol}://${req.get('host')}/users/resetPassword/${resetToken}`;
     const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:
      ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
@@ -208,3 +209,28 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
     createSendToken(user, 200, res);
 
 });
+
+exports.addUserToRequest = async (req, res, next) => {
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) return;
+
+    // verify the token
+    //verify also accepts a callback function, but we will make it return a promise
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    // check if user still exists => to check the case if user has jwt token but the user was deleted!
+    const freshUser = await User.findOne({_id: decoded.id});
+    if (!freshUser) {
+        return next(new AppError("The user belonging to this token does not exist.", 401));
+    }
+
+    // check if user changed password after jwt was issued
+    if (freshUser.changePasswordAfter(decoded.iat)) {
+        return next(new AppError("User recently changed their password! Please login again.", 401));
+    }
+
+    //grant access to the protected rout
+    //also add this user to the request object
+    req.user = freshUser;
+    console.log("user added to the request!");
+}
