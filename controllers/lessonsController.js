@@ -35,7 +35,7 @@ const getCelestialObjects = (req, res, next) => {
         status: 'success', data: [{DisplayName: "Planets", id: "Planet"}, {DisplayName: "Stars", id: "Star"}, {
             DisplayName: "Moon", id: "Moon"
         }, {DisplayName: "Asteroids", id: "Asteroid"}, {
-            DisplayName: "Dwarf Planets", id: "DwarfPlanet"
+            DisplayName: "Dwarf Planets", id: "Dwarf%20Planet"
         }, {DisplayName: "Galaxies", id: "galaxies"}]
     });
 }
@@ -147,7 +147,7 @@ exports.getCoContent = catchAsync(async (req, res, next) => {
         case "Star":
         case "Moon":
         case "Asteroid":
-        case "DwarfPlanet":
+        case "Dwarf Planet":
             handleNonGalaxies(req, res, next);
             break;
         default:
