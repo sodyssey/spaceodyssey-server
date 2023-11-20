@@ -2,6 +2,8 @@ const axios = require("axios");
 
 //only keeps allowedFields in obj
 const filterObj = (obj, allowedFields) => {
+    console.log(obj)
+    console.log(Object.keys(obj))
     const newObj = {};
     Object.keys(obj).forEach(el => {
         if (allowedFields.includes(el)) newObj[el] = obj[el];
@@ -47,23 +49,26 @@ exports.getCelestialPhysicalData = async (body) => {
         moons: "",
         mass: "kg",
         vol: "kg<sup>3</sup>",
-        englishName: "",
-        id:"",
-        name:""
+        aroundPlanet: ""
     }
-
     const response = await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
     let data = response.data;
+    //api sometime is returning invalid json data
+    if (typeof data === 'string') {
+        data = data.replace(/:,/g, ':null,');
+        data = JSON.parse(data);
+    }
     data = filterObj(data, Object.keys(toKeep));
     const moons = [];
-    for (const moon of data.moons) {
+    for (const moon of data.moons || []) {
         moons.push(moon.moon);
     }
-    data.moons = moons;
-    data.mass = `${data.mass.massValue}×10<sup>${data.mass.massExponent}</sup>`;
-    data.vol = `${data.vol.volValue}×10<sup>${data.mass.volExponent}</sup>`;
+    data.moons = moons.length > 0 ? moons : undefined;
+    data.aroundPlanet = data.aroundPlanet?.planet || undefined;
+    data.mass = data.mass && `${data.mass?.massValue}×10<sup>${data.mass?.massExponent}</sup>`;
+    data.vol = data.vol && `${data.vol?.volValue}×10<sup>${data.vol?.volExponent}</sup>`;
     for (const property of Object.keys(data)) {
-        data[property] = `${data[property]} ${toKeep[property]}`;
+        data[property] = data[property] ? `${data[property]} ${toKeep[property]}` : undefined;
     }
     response.data = data;
     return response;

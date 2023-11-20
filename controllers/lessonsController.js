@@ -3,7 +3,6 @@ const axios = require('axios');
 const catchAsync = require("../util/catchAsync");
 const apiReturns = require("./../util/apiReturns");
 
-//todo: format physical data because frontend developer isn't going to
 //todo: return 404 response for all requested info that shall not be entertained
 //todo: normalize the code
 
@@ -216,13 +215,10 @@ const getBodyData = catchAsync(async (req, res, next) => {
         response = await apiReturns.getCelestialPhysicalData(body);
         physicalData = response.data;
         commonName = response.data.englishName;
-        console.log(commonName);
     }
 
     //having some problems with scientific names
-    body = commonName || body;
-
-    console.log(body);
+    body = `${(commonName || body)} ${coC}`;
 
     //get facts
     let englishName;
@@ -234,7 +230,7 @@ const getBodyData = catchAsync(async (req, res, next) => {
         facts = response.data.summary;
         image = response.data.image;
     } catch (e) {
-        console.error(e);
+        console.error("error in wikiBriefs");
     }
 
     englishName = englishName || body;
@@ -248,7 +244,7 @@ const getBodyData = catchAsync(async (req, res, next) => {
         dataFromWiki = Object.values(jsonData.query.pages)[0];
         info = dataFromWiki.extract;
     } catch (e) {
-        console.error(e);
+        console.error("error in wikiExtracts");
     }
     image = image || dataFromWiki?.thumbnail?.source;
 
@@ -271,8 +267,8 @@ const getBodyData = catchAsync(async (req, res, next) => {
     })
 });
 exports.getBodyData = getBodyData;
-const getISS_data = catchAsync(async (req, res, next) => {
 
+const getISS_data = catchAsync(async (req, res, next) => {
     const response = await apiReturns.wikiBriefs('The International Space Station', '3');
     let facts = response.data.summary;
     const image = response.data.image;
