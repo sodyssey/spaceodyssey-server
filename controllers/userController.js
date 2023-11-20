@@ -3,7 +3,7 @@ const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 
 //only keeps allowedFields in obj
-filterObj = (obj, ...allowedFields) => {
+const filterObj = (obj, ...allowedFields) => {
     const newObj = {};
     Object.keys(obj).forEach(el => {
         if (allowedFields.includes(el)) newObj[el] = obj[el];

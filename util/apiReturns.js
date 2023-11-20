@@ -1,5 +1,14 @@
 const axios = require("axios");
 
+//only keeps allowedFields in obj
+const filterObj = (obj, allowedFields) => {
+    const newObj = {};
+    Object.keys(obj).forEach(el => {
+        if (allowedFields.includes(el)) newObj[el] = obj[el];
+    });
+    return newObj;
+}
+
 exports.wikiBriefs = async (q, topk) => {
     const options = {
         method: 'GET', url: 'https://wiki-briefs.p.rapidapi.com/search', params: {
@@ -21,9 +30,40 @@ exports.getWikiExtracts = async (title) => {
 };
 
 exports.getCelestialPhysicalData = async (body) => {
-    //todo: format physical data to include units
-    //todo: also return definitions ?
-    return await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
+    const toKeep = {
+        semimajorAxis: "km",
+        perihelion: "km",
+        aphelion: "km",
+        eccentricity: "km",
+        inclination: "°",
+        density: "g.cm<sup>3</sup>",
+        gravity: "m.s<sup>-1</sup>",
+        escape: "m.s<sup>-1</sup>",
+        meanRadius: "km",
+        equalRadius: "km",
+        polarRadius: "km",
+        axialTilt: "°",
+        avgTemp: "K",
+        moons: "",
+        mass: "kg",
+        vol: "kg<sup>3</sup>"
+    }
+
+    const response = await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
+    let data = response.data;
+    data = filterObj(data, Object.keys(toKeep));
+    const moons = [];
+    for (const moon of data.moons) {
+        moons.push(moon.moon);
+    }
+    data.moons = moons;
+    data.mass = `${data.mass.massValue}×10<sup>${data.mass.massExponent}</sup>`;
+    data.vol = `${data.vol.volValue}×10<sup>${data.mass.volExponent}</sup>`;
+    for (const property of Object.keys(data)) {
+        data[property] = `${data[property]} ${toKeep[property]}`;
+    }
+    response.data = data;
+    return response;
 };
 
 exports.getPeopleInISS = async () => {
