@@ -203,31 +203,62 @@ exports.getBody = catchAsync(async (req, res, next) => {
 });
 const getBodyData = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
-    const body = req.params.body || req.params.event || req.params.mission;
+    let body = req.params.body || req.params.event || req.params.mission;
 
     if (body === 'ISS') {
         getISS_data(req, res, next);
         return;
     }
 
-    //get facts
-    let response = await apiReturns.wikiBriefs(body, 5);
-    const englishName = response.data.title;
-    const facts = response.data.summary;
-    const image = response.data.image;
-    const wikiBodyName = response.data.url.split('/').pop();
-
-    response = await apiReturns.getWikiExtracts(wikiBodyName);
-    const jsonData = response.data;
-    const dataFromWiki = Object.values(jsonData.query.pages)[0];
-    const info = dataFromWiki.extract;
-
-
+    let response;
+    let commonName;
     let physicalData = undefined;
     if (coC && coC !== "galaxies") {
-        response = await apiReturns.getCelestialPhysicalData(wikiBodyName);
+        response = await apiReturns.getCelestialPhysicalData(body);
         physicalData = response.data;
+        commonName = response.data.englishName;
     }
+
+    //having some problems with scientific planets names
+    if (coC === "Planet") body = commonName;
+
+    //get facts
+    let englishName;
+    let facts;
+    let image;
+    try {
+        let response = await apiReturns.wikiBriefs(body, 5);
+        englishName = response.data.title;
+        facts = response.data.summary;
+        image = response.data.image;
+    } catch (e) {
+        console.error(e);
+        try {
+            let response = await apiReturns.wikiBriefs(commonName, 5);
+            englishName = response.data.title;
+            facts = response.data.summary;
+            image = response.data.image;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    englishName = englishName || body;
+    const wikiBodyName = response.data.url?.split('/').pop() || body;
+
+    let info;
+    let dataFromWiki;
+    try {
+        response = await apiReturns.getWikiExtracts(wikiBodyName);
+        const jsonData = response.data;
+        dataFromWiki = Object.values(jsonData.query.pages)[0];
+        info = dataFromWiki.extract;
+    } catch (e) {
+        console.error(e);
+    }
+    image = image || dataFromWiki?.thumbnail?.source;
+
+
     let marsRoverAdditional = undefined;
     if (body === 'Mars_rover') {
         response = await apiReturns.getMarsRoverAdditionalData();
