@@ -220,7 +220,7 @@ const getBodyData = catchAsync(async (req, res, next) => {
     }
 
     //having some problems with scientific planets names
-    if (coC === "Planet") body = commonName;
+    body = commonName;
 
     //get facts
     let englishName;

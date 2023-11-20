@@ -13,7 +13,7 @@ exports.wikiBriefs = async (q, topk) => {
 };
 
 exports.getWikiExtracts = async (title) => {
-    return await axios.get(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${title}&continue=&format=json&formatversion=2`)
+    return await axios.get(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&continue=&format=json&formatversion=2&pithumbsize=500&titles=${title}`);
 };
 
 exports.getCelestialPhysicalData = async (body) => {
@@ -27,38 +27,23 @@ exports.getPeopleInISS = async () => {
 }
 
 exports.getMarsRoverAdditionalData = async () => {
-    return [
-        {
-            rover: "Sojourner (NASA)",
-            launch: "December 4, 1996",
-            landing: "July 4, 1997",
-            duration: "83 days"
-        },
-        {
-            rover: "Spirit (NASA)",
-            launch: "June 10, 2003",
-            landing: "January 4, 2004",
-            duration: "Operated until March 22, 2010"
-        },
-        {
-            rover: "Opportunity (NASA)",
-            launch: "July 7, 2003",
-            landing: "January 25, 2004",
-            duration: "Operated until June 10, 2018"
-        },
-        {
-            rover: "Curiosity (NASA)",
-            launch: "November 26, 2011",
-            landing: "August 5, 2012",
-            duration: "Ongoing Mission"
-        },
-        {
-            rover: "Perseverance (NASA)",
-            launch: "July 30, 2020",
-            landing: "February 18, 2021",
-            duration: "Ongoing Mission"
-        },
-    ]
+    return [{
+        rover: "Sojourner (NASA)", launch: "December 4, 1996", landing: "July 4, 1997", duration: "83 days"
+    }, {
+        rover: "Spirit (NASA)",
+        launch: "June 10, 2003",
+        landing: "January 4, 2004",
+        duration: "Operated until March 22, 2010"
+    }, {
+        rover: "Opportunity (NASA)",
+        launch: "July 7, 2003",
+        landing: "January 25, 2004",
+        duration: "Operated until June 10, 2018"
+    }, {
+        rover: "Curiosity (NASA)", launch: "November 26, 2011", landing: "August 5, 2012", duration: "Ongoing Mission"
+    }, {
+        rover: "Perseverance (NASA)", launch: "July 30, 2020", landing: "February 18, 2021", duration: "Ongoing Mission"
+    },]
 };
 
 exports.getMarsImages = async (date) => {
