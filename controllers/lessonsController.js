@@ -216,10 +216,13 @@ const getBodyData = catchAsync(async (req, res, next) => {
         response = await apiReturns.getCelestialPhysicalData(body);
         physicalData = response.data;
         commonName = response.data.englishName;
+        console.log(commonName);
     }
 
     //having some problems with scientific names
     body = commonName || body;
+
+    console.log(body);
 
     //get facts
     let englishName;
