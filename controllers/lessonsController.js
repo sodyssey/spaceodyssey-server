@@ -147,7 +147,7 @@ exports.getCoContent = catchAsync(async (req, res, next) => {
         case "Star":
         case "Moon":
         case "Asteroid":
-        case "Dwarf Planet":
+        case "DwarfPlanet":
             handleNonGalaxies(req, res, next);
             break;
         default:

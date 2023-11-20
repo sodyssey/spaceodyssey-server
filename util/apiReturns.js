@@ -47,7 +47,9 @@ exports.getCelestialPhysicalData = async (body) => {
         moons: "",
         mass: "kg",
         vol: "kg<sup>3</sup>",
-        englishName: ""
+        englishName: "",
+        id:"",
+        name:""
     }
 
     const response = await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
