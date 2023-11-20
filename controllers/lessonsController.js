@@ -35,7 +35,7 @@ const getCelestialObjects = (req, res, next) => {
         status: 'success', data: [{DisplayName: "Planets", id: "Planet"}, {DisplayName: "Stars", id: "Star"}, {
             DisplayName: "Moon", id: "Moon"
         }, {DisplayName: "Asteroids", id: "Asteroid"}, {
-            DisplayName: "Dwarf Planets", id: "Dwarf%20Planet"
+            DisplayName: "Dwarf Planets", id: "DwarfPlanet"
         }, {DisplayName: "Galaxies", id: "galaxies"}]
     });
 }
@@ -204,7 +204,6 @@ exports.getBody = catchAsync(async (req, res, next) => {
 const getBodyData = catchAsync(async (req, res, next) => {
     const coC = req.params.coC;
     let body = req.params.body || req.params.event || req.params.mission;
-
     if (body === 'ISS') {
         getISS_data(req, res, next);
         return;
@@ -219,28 +218,20 @@ const getBodyData = catchAsync(async (req, res, next) => {
         commonName = response.data.englishName;
     }
 
-    //having some problems with scientific planets names
-    body = commonName;
+    //having some problems with scientific names
+    body = commonName || body;
 
     //get facts
     let englishName;
     let facts;
     let image;
     try {
-        let response = await apiReturns.wikiBriefs(body, 5);
+        response = await apiReturns.wikiBriefs(body, 5);
         englishName = response.data.title;
         facts = response.data.summary;
         image = response.data.image;
     } catch (e) {
         console.error(e);
-        try {
-            let response = await apiReturns.wikiBriefs(commonName, 5);
-            englishName = response.data.title;
-            facts = response.data.summary;
-            image = response.data.image;
-        } catch (e) {
-            console.error(e);
-        }
     }
 
     englishName = englishName || body;
@@ -280,18 +271,18 @@ exports.getBodyData = getBodyData;
 const getISS_data = catchAsync(async (req, res, next) => {
 
     const response = await apiReturns.wikiBriefs('The International Space Station', '3');
-    const facts = response.data.summary;
+    let facts = response.data.summary;
     const image = response.data.image;
     res.status(200).json({
-        status: "success",
-        data: {
+        status: "success", data: {
             englishName: "ISS",
             image: image,
             info: "The International Space Station (ISS) is a large, habitable spacecraft that orbits Earth at an average altitude of approximately 420 kilometers (about 261 miles). It serves as a unique and collaborative space laboratory where astronauts and cosmonauts from various countries conduct scientific research and experiments in the microgravity environment of space. The ISS represents one of the most significant achievements in international cooperation in the field of space exploration.",
-            facts: facts.slice(1) //the first entry is log=> api bugging
+            facts: facts
         }
     });
 });
+
 exports.getPeopleInISS = catchAsync(async (req, res, next) => {
     let response = await apiReturns.getPeopleInISS();
     const data = response.data;

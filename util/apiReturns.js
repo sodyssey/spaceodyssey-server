@@ -9,7 +9,11 @@ exports.wikiBriefs = async (q, topk) => {
         }
     };
 
-    return await axios.request(options);
+    const response = await axios.request(options);
+    facts = response.data.summary;
+    facts = facts.filter(fact => fact.indexOf("<!") === -1);
+    response.data.summary = facts;
+    return response;
 };
 
 exports.getWikiExtracts = async (title) => {
