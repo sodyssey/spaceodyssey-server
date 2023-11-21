@@ -3,7 +3,8 @@ const userController = require("./../controllers/userController"); //this format
 const authController = require("./../controllers/authController");
 const router = express.Router();
 
-
+//get details about a user using jwtToken
+router.get('/profile/', authController.protect, userController.getUser);
 //for signing up
 router.post('/signup', authController.signup);
 //for loging in
