@@ -13,7 +13,7 @@ app.use(helmet());
 const corsOpts = {
     origin: "*",
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["*"],
 };
 app.use(cors(corsOpts));
 

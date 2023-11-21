@@ -218,7 +218,8 @@ const getBodyData = catchAsync(async (req, res, next) => {
     }
 
     //having some problems with scientific names
-    body = `${(commonName || body)} ${coC}`;
+    body = `${(commonName || body)}${coC? coC:""}`;
+    console.log(body);
 
     //get facts
     let englishName;
