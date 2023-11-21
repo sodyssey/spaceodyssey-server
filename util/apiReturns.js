@@ -2,8 +2,8 @@ const axios = require("axios");
 
 //only keeps allowedFields in obj
 const filterObj = (obj, allowedFields) => {
-    console.log(obj)
-    console.log(Object.keys(obj))
+    // console.log(obj)
+    // console.log(Object.keys(obj))
     const newObj = {};
     Object.keys(obj).forEach(el => {
         if (allowedFields.includes(el)) newObj[el] = obj[el];
@@ -12,6 +12,7 @@ const filterObj = (obj, allowedFields) => {
 }
 
 exports.wikiBriefs = async (q, topk) => {
+    console.log(`wikibrief: ${q}`);
     const options = {
         method: 'GET', url: 'https://wiki-briefs.p.rapidapi.com/search', params: {
             q: `${q}`, topk: `${topk}`
@@ -28,6 +29,7 @@ exports.wikiBriefs = async (q, topk) => {
 };
 
 exports.getWikiExtracts = async (title) => {
+    console.log(`wikiExtract: ${title}`);
     return await axios.get(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&continue=&format=json&formatversion=2&pithumbsize=500&titles=${title}`);
 };
 
@@ -49,7 +51,8 @@ exports.getCelestialPhysicalData = async (body) => {
         moons: "",
         mass: "kg",
         vol: "kg<sup>3</sup>",
-        aroundPlanet: ""
+        aroundPlanet: "",
+        englishName: ""
     }
     const response = await axios.get(`https://api.le-systeme-solaire.net/rest/bodies/${body}`);
     let data = response.data;

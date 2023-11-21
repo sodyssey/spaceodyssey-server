@@ -6,6 +6,8 @@ const catchAsync = require("../util/catchAsync");
 const QuizList = require("../model/quizListModel");
 const authController = require("./authController");
 
+const ENTRIES_PER_PAGE = 100;
+
 //admin can create a quiz
 exports.createQuiz = catchAsync(async (req, res, next) => {
     if (!req.body.topic) next(new AppError("Quiz topic not given!", 400));
@@ -136,11 +138,11 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     }
 
     //skip appropriate number of quizes
-    //per page 20 quizes
+    //per page ENTRIES_PER_PAGE quizes
     const offset = req.params.offset * 1 || 0;
     let loadMore = null;
-    if (offset + 20 < quizes.length) loadMore = `/quiz/getQuizes/${offset + 20}`
-    quizes = quizes.slice(offset, offset + 20);
+    if (offset + ENTRIES_PER_PAGE < quizes.length) loadMore = `/quiz/getQuizes/${offset + ENTRIES_PER_PAGE}`
+    quizes = quizes.slice(offset, offset + ENTRIES_PER_PAGE);
 
     //return the remaining
 
@@ -163,11 +165,11 @@ exports.getSubmittedQuizes = catchAsync(async (req, res, next) => {
     let quizes = quizesGiven.quizes;
 
     //skip appropriate number of quizes
-    //per page 20 quizes
+    //per page ENTRIES_PER_PAGE quizes
     const offset = req.params.offset * 1 || 0;
     let loadMore = null;
-    if (offset + 20 < quizes.length) loadMore = `/quiz/getSubmittedQuizes/${offset + 20}`
-    quizes = quizes.slice(offset, offset + 20);
+    if (offset + ENTRIES_PER_PAGE < quizes.length) loadMore = `/quiz/getSubmittedQuizes/${offset + ENTRIES_PER_PAGE}`
+    quizes = quizes.slice(offset, offset + ENTRIES_PER_PAGE);
 
     for (const quiz of quizes) {
         const toAdd = {};
@@ -196,11 +198,11 @@ exports.getCreatedQuizes = catchAsync(async (req, res, next) => {
     let quizes = quizesCreatedRaw.quizes;
 
     //skip appropriate number of quizes
-    //per page 20 quizes
+    //per page ENTRIES_PER_PAGE quizes
     const offset = req.params.offset * 1 || 0;
     let loadMore = null;
-    if (offset + 20 < quizes.length) loadMore = `/quiz/getCreatedQuizes/${offset + 20}`
-    quizes = quizes.slice(offset, offset + 20);
+    if (offset + ENTRIES_PER_PAGE < quizes.length) loadMore = `/quiz/getCreatedQuizes/${offset + ENTRIES_PER_PAGE}`
+    quizes = quizes.slice(offset, offset + ENTRIES_PER_PAGE);
 
 
     for (const quiz of quizes) {
