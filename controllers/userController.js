@@ -1,6 +1,9 @@
 const User = require("./../model/userModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
+const newsController = require("./newsController");
+const authController = require("./authController");
+
 
 //only keeps allowedFields in obj
 const filterObj = (obj, ...allowedFields) => {
@@ -72,6 +75,30 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
         status: 'success',
         message: "User deleted!",
         data: null
+    });
+
+});
+
+exports.getUser = catchAsync(async (req, res, next) => {
+    let user = await User.findById(req.user._id);
+    user = {...user}._doc;
+
+    //adding images link to follows attribute of user
+    const follows = [];
+    const newsImages = newsController.newsImages;
+    for (const sa of user.follows) {
+        const toAdd = {};
+        toAdd.name = sa;
+        toAdd.image = newsImages[sa];
+        follows.push(toAdd);
+    }
+    user.follows = follows;
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user
+        }
     });
 
 });
