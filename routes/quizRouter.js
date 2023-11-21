@@ -10,7 +10,7 @@ router.route('/submitQuiz/:quizID').post(quizController.submitQuiz);
 router.route('/getQuizes/:offset').get(quizController.getAvailableQuizes);
 router.route('/getSubmittedQuizes/:offset').get(authController.protect, quizController.getSubmittedQuizes);
 router.route('/getCreatedQuizes/:offset').get(authController.protect, authController.restrictToAdmin, quizController.getCreatedQuizes);
-router.route('/getSubmittedQuizes/:quizID').get(authController.protect, quizController.getParticularSubmittedQuiz);
-router.route('/getCreatedQuizes/:quizID').get(authController.protect, authController.restrictToAdmin, quizController.getParticularCreatedQuiz);
+router.route('/getSubmittedQuiz/:quizID').get(authController.protect, quizController.getParticularSubmittedQuiz);
+router.route('/getCreatedQuiz/:quizID').get(authController.protect, authController.restrictToAdmin, quizController.getParticularCreatedQuiz);
 
 module.exports = router;
