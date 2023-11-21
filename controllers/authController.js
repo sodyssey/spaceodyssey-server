@@ -6,6 +6,7 @@ const sendEmail = require("../util/email");
 const crypto = require("crypto");
 const QuizList = require("../model/quizListModel");
 const User = require("../model/userModel");
+const newsController = require("./newsController");
 
 //returns a jwt token created using given id
 const signToken = (id) => {
@@ -14,16 +15,8 @@ const signToken = (id) => {
 
 
 //creates a jwt token using user's _id, put it into a cookie and send it as
-//todo: learn how and what to work with cookie
 const createSendToken = (user, status, res) => {
     const token = signToken(user._id);
-
-    //we gonna set a cookie :3
-    const cookieOptions = {
-        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000), httpOnly: true, // secure: true //this shall be uncommented while in production
-    }
-    res.cookie('jwt', token, cookieOptions);
-
 
     //hide password as we are not 'selecting' user == password is still in user object
     user.password = undefined;
@@ -75,11 +68,23 @@ exports.login = catchAsync(async (req, res, next) => {
 
     //check if user exists and password is correct
     //we have restricted the default selection of password, so we explicitly select password
-    const user = await User.findOne({username}).select('+password');
+    let user = await User.findOne({username}).select('+password');
     if (!user || !(await user.correctPassword(password, user.password))) {
         return next(new AppError("Incorrect username or password!", 401));
     }
-    //
+    user = {...user}._doc;
+
+    //adding images link to follows attribute of user
+    const follows = [];
+    const newsImages = newsController.newsImages;
+    for (const sa of user.follows) {
+        const toAdd = {};
+        toAdd.name = sa;
+        toAdd.image = newsImages[sa];
+        follows.push(toAdd);
+    }
+    user.follows = follows;
+
     //if all ok, send token to client
     createSendToken(user, 200, res);
 });
