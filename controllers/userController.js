@@ -27,7 +27,19 @@ const updateMe = catchAsync(async (req, res, next) => {
 
     //using findByIdAndUpdate instead of typical user.save() because we are not working with passwords and no need to complicate stuff
     //new: true=> send the updated user
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {new: true, runValidators: true});
+    let updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {new: true, runValidators: true});
+
+    updatedUser = {...updatedUser}._doc;
+    //adding images link to follows attribute of user
+    const follows = [];
+    const newsImages = newsController.newsImages;
+    for (const sa of updatedUser.follows) {
+        const toAdd = {};
+        toAdd.name = sa;
+        toAdd.image = newsImages[sa];
+        follows.push(toAdd);
+    }
+    updatedUser.follows = follows;
 
     res.status(200).json({
         status: 'success',
