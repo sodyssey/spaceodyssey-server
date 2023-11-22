@@ -16,7 +16,8 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 //user can change password using his previous password
 router.patch('/updateMyPassword', authController.protect, authController.updateMyPassword);
 //user can delete himself
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
+//todo: revert changes after debug
+router.post('/deleteMe', authController.protect, userController.deleteMe);
 //user can add spaceAgency to his follows list
 router.patch('/addFollows/:sa', authController.protect, userController.addFollows);
 //user can remove a spaceAgency from his follows list
