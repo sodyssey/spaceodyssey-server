@@ -149,7 +149,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 
     //send it to user's email
-    const resetUrl = `${req.protocol}://${req.get('host')}/users/resetPassword/${resetToken}`;
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword/${resetToken}`;
     const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:\n
      ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
 
