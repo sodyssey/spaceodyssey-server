@@ -29,7 +29,7 @@ const updateMe = catchAsync(async (req, res, next) => {
     //new: true=> send the updated user
     let updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {new: true, runValidators: true});
 
-    updatedUser = {...updatedUser};
+    updatedUser = {...updatedUser}._doc;
     //adding images link to follows attribute of user
     const follows = [];
     const newsImages = newsController.newsImages;
