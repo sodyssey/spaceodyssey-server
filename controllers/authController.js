@@ -137,8 +137,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     //protected function will be called before this, so req is supposed to have user
     //get user based on posted email
     const user = await User.findOne({email: req.body.email});
+    const link = req.body.link;
     if (!user) {
         return next(new AppError("No user with that email address.", 404));
+    }
+    if (!link) {
+        return next(new AppError("Link to send not provided!", 400));
     }
 
     //generate token
@@ -149,9 +153,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 
     //send it to user's email
-    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword/${resetToken}`;
+    const resetUrl = `${link}/${resetToken}`;
     const message = `Forgot password? Sumbit a patch request with your new password and passwordConfirm to:\n
-     ${resetUrl}\nPlease ignore this message if you didn't forgot the password!.`;
+     ${resetUrl}\n\nPlease ignore this message if you didn't forgot the password!.`;
 
     try {
         await sendEmail({
