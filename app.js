@@ -18,8 +18,9 @@ const corsOpts = {
 app.use(cors(corsOpts));
 
 //limit 10 login and signup attempts per hour per IP
+//todo: change it back to 20
 const limiter = rateLimit({
-    max: 10, windowMs: 60 * 60 * 1000, message: "Too many requests from this IP. Please try again later."
+    max: 100, windowMs: 60 * 60 * 1000, message: "Too many requests from this IP. Please try again later."
 });
 app.use('/users/login', limiter);
 app.use('/users/signup', limiter);
