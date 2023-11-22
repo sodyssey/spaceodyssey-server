@@ -80,7 +80,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 });
 
 exports.getUser = catchAsync(async (req, res, next) => {
-    let user = await User.findById(req.user._id);
+    let user = await User.findById(req.body.userid);
     user = {...user}._doc;
 
     //adding images link to follows attribute of user
