@@ -16,6 +16,7 @@ const filterObj = (obj, ...allowedFields) => {
 
 //let name, avatar, follows of a user get updated
 const updateMe = catchAsync(async (req, res, next) => {
+
     //1. if trying to update password, raise an error
     if (req.body.password || req.body.passwordConfirm)
         return next(new AppError('This route is not for password reset. please go to /updateMyPassword', 400));
@@ -23,6 +24,7 @@ const updateMe = catchAsync(async (req, res, next) => {
     //2. update otherwise
     //we want to let user change name, avatar, follows only, hence filter out unwanted fields
     const filteredBody = filterObj(req.body, 'name', 'avatar', 'follows');
+
     //using findByIdAndUpdate instead of typical user.save() because we are not working with passwords and no need to complicate stuff
     //new: true=> send the updated user
     const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {new: true, runValidators: true});
@@ -34,9 +36,9 @@ const updateMe = catchAsync(async (req, res, next) => {
         }
     });
 });
+exports.updateMe = updateMe;
 
 exports.addFollows = async (req, res, next) => {
-    //todo: duplication potential exists
     const user = await User.findById(req.user._id);
     const follows = user.follows;
     const sa = req.params.sa;

@@ -21,5 +21,7 @@ router.delete('/deleteMe', authController.protect, userController.deleteMe);
 router.patch('/addFollows/:sa', authController.protect, userController.addFollows);
 //user can remove a spaceAgency from his follows list
 router.patch('/removeFollows/:sa', authController.protect, userController.removeFollows);
+//user can update multiple fields
+router.patch('/updateMe', authController.protect, userController.updateMe);
 
 module.exports = router;
