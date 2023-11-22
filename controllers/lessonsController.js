@@ -218,7 +218,7 @@ const getBodyData = catchAsync(async (req, res, next) => {
     }
 
     //having some problems with scientific names
-    body = `${(commonName || body)}${coC? coC:""}`;
+    body = `${(commonName || body)}${coC? coC!=="galaxies"?coC:"":""}`;
     console.log(body);
 
     //get facts
