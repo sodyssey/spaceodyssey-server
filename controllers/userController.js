@@ -19,8 +19,7 @@ const filterObj = (obj, ...allowedFields) => {
 const updateMe = catchAsync(async (req, res, next) => {
 
     //1. if trying to update password, raise an error
-    if (req.body.password || req.body.passwordConfirm)
-        return next(new AppError('This route is not for password reset. please go to /updateMyPassword', 400));
+    if (req.body.password || req.body.passwordConfirm) return next(new AppError('This route is not for password reset. please go to /updateMyPassword', 400));
 
     //2. update otherwise
     //we want to let user change name, avatar, follows only, hence filter out unwanted fields
@@ -44,6 +43,7 @@ const updateMe = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
+        token:req.headers.authorization.split(' ')[1],
         data: {
             user: updatedUser
         }
@@ -67,8 +67,7 @@ exports.removeFollows = async (req, res, next) => {
     const follows = user.follows;
     const sa = req.params.sa;
     const index = follows.indexOf(sa);
-    if (index > -1)
-        follows.splice(index, 1);
+    if (index > -1) follows.splice(index, 1);
     req.body.follows = follows; //because we are going to call updateMe
     await updateMe(req, res, next);
 };
@@ -87,9 +86,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 
     //we won't see the response in postman as status code is 204
     res.status(204).json({
-        status: 'success',
-        message: "User deleted!",
-        data: null
+        status: 'success', message: "User deleted!", data: null
     });
 
 });
@@ -110,8 +107,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
     user.follows = follows;
 
     res.status(200).json({
-        status: 'success',
-        data: {
+        status: 'success', data: {
             user
         }
     });
