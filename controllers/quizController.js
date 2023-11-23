@@ -104,7 +104,7 @@ exports.submitQuiz = catchAsync(async (req, res, next) => {
 
         if (quizList.quizes.map(quiz => quiz.quiz).includes(quiz._id)) return next(new AppError("You have already given this quiz!", 403));
 
-        quizList.quizes.push({
+        quizList.quizes.unshift({
             quiz: quiz._id, choosenOptions: choosenOptions, quizMarks: correct, quizDate: Date.now()
         });
         await quizList.save();
@@ -127,7 +127,7 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     }
 
     //get all the quizes available
-    let quizes = await Quiz.find().select('topic _id');
+    let quizes = await Quiz.find().select('topic _id').sort({ _id: -1 });;
 
     //remove quizes that user has given, if any
     if (req.user) {
