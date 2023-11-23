@@ -2,6 +2,7 @@ const axios = require('axios');
 const catchAsync = require("../util/catchAsync");
 const authControlelr = require("./authController");
 
+const ENTRIES_PER_PAGE = 10;
 
 const newsImages = {
     "NASA": "https://firebasestorage.googleapis.com/v0/b/space-odyssey-28b84.appspot.com/o/space%20agencies%2Fnasa-6.svg?alt=media&token=baa933c4-90b2-45d3-9b90-6dc0d2174f08",
@@ -48,13 +49,15 @@ exports.getNews = catchAsync(async (req, res, next) => {
     }
 
     const follows = req.user?.follows || [];
+    const entriesPerPage = follows.length * ENTRIES_PER_PAGE || ENTRIES_PER_PAGE;
     const offset = req.params.offset * 1 || 0;
-    const response = await axios.get(`https://api.spaceflightnewsapi.net/v4/articles/?format=json&limit=20&offset=${offset}&ordering=-published_at&summary_contains_one=${follows.join("%2C")}`);
+    const response = await axios.get(`https://api.spaceflightnewsapi.net/v4/articles/?format=json&limit=${entriesPerPage}&offset=${offset}&ordering=-published_at&summary_contains_one=${follows.join("%2C")}`);
     const data = response.data;
     const toReturn = {};
     toReturn.count = data.count;
+    toReturn.length = 0;
     toReturn.tags = follows;
-    toReturn.loadMore = offset + 20 < data.count ? `/news/news/${offset + 20}` : null;
+    toReturn.loadMore = offset + entriesPerPage < data.count ? `/news/news/${offset + entriesPerPage}` : null;
     toReturn.news = [];
     for (const news of data.results) {
         const toAdd = {};
@@ -66,6 +69,7 @@ exports.getNews = catchAsync(async (req, res, next) => {
         toAdd.publishedAt = news.published_at;
         toReturn.news.push(toAdd);
     }
+    toReturn.length = toReturn.news.length;
     res.status(200).json({
         status: 'success', data: toReturn
     });
