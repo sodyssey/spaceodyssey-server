@@ -80,29 +80,16 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 
     //2. check if posted password is correct
     if (!user || !req.body.password || !(await user.correctPassword(req.body.password, user.password))) {
-        // return next(new AppError("Incorrect password!", 401));
-        //todo: revert changes after debug
-        res.status(400).json({
-           status:"fail",
-           message:"incorrect password",
-           yourPassword:req.body.password,
-            yourPasswordHashed:await bcryptjs.hash(req.body.password, 12),
-            actualPasswordHashed:user.password
-        });
+        return next(new AppError("Incorrect password!", 401));
     }
 
     user = await User.findByIdAndUpdate(req.user._id, {active: false});
 
     //we won't see the response in postman as status code is 204
-    // todo: change status code back to 204 and revert other changes
-    res.status(200).json({
+    res.status(204).json({
         status: 'success',
         message: "User deleted!",
-        data: null,
-
-        yourPassword:req.body.password,
-        yourPasswordHashed:await bcryptjs.hash(req.body.password, 12),
-        actualPasswordHashed:user.password
+        data: null
     });
 
 });
