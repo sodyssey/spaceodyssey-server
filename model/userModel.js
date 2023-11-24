@@ -3,11 +3,10 @@ const mongoose = require("mongoose");
 const validator = require("validator"); //provides various schema validators
 const bcryptjs = require("bcryptjs");
 
-//todo: add some validators too
-
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
+        lowercase: true,
         required: [true, "A user must have a username"],
         unique: true,
         minLength: [5, "username too short(min=5)!"],

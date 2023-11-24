@@ -127,9 +127,7 @@ exports.getAvailableQuizes = catchAsync(async (req, res, next) => {
     }
 
     //get all the quizes available
-    let quizes = await Quiz.find().select('topic questions _id').sort({ _id: -1 });;
-
-
+    let quizes = await Quiz.find().select('topic questions _id').sort({_id: -1});
 
     //remove quizes that user has given, if any
     if (req.user) {
