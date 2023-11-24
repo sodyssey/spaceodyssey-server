@@ -24,11 +24,10 @@ const newsImages = {
 exports.newsImages = newsImages;
 
 //return available newsAgencies to follow
-exports.getNewsAgencies = catchAsync((req, res, next) => {
-    //we have selected only 5 space agencies
+exports.getNewsAgencies = catchAsync(async (req, res, next) => {
     const agencies = [];
 
-    for (const sa of ["NASA", "ISRO", "ESA", "Roscosmos", "CNSA"]) {
+    for (const sa of Object.keys(newsImages)) {
         const toAdd = {};
         toAdd.name = sa;
         toAdd.image = newsImages[sa];
