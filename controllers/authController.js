@@ -59,12 +59,13 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 
 exports.login = catchAsync(async (req, res, next) => {
-    const {username, password} = req.body;
+    let {username, password} = req.body;
 
     //check if email and password exists => user entered these fields
     if (!username || !password) {
         return next(new AppError("Please provide email and password", 400));
     }
+    username=username.toLowerCase();
 
     //check if user exists and password is correct
     //we have restricted the default selection of password, so we explicitly select password

@@ -43,7 +43,7 @@ const updateMe = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        token:req.headers.authorization.split(' ')[1],
+        token: req.headers.authorization.split(' ')[1],
         data: {
             user: updatedUser
         }
@@ -82,7 +82,9 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
         return next(new AppError("Incorrect password!", 401));
     }
 
-    user = await User.findByIdAndUpdate(req.user._id, {active: false});
+    // user = await User.findByIdAndUpdate(req.user._id, {active: false});
+    user = await User.findByIdAndDelete(req.user._id);
+
 
     //we won't see the response in postman as status code is 204
     res.status(204).json({
