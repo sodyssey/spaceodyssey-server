@@ -106,12 +106,16 @@ exports.getMarsImages = async (date) => {
     const photos = response.data.photos;
     const photosToReturn = [];
     for (const photo of photos) {
-        const toAdd = {};
-        toAdd.id = photo.id;
-        toAdd.roverName = photo.rover.name;
-        toAdd.camera = photo.camera.full_name;
-        toAdd.img_src = photo.img_src;
-        photosToReturn.push(toAdd);
+        const inDatabase = photosToReturn.map(obj => obj.img_src.split("_").slice(1).join("_"));
+        const newImageSrc = photo.img_src.split("_").slice(1).join("_");
+        if (inDatabase.indexOf(newImageSrc)<0) {
+            const toAdd = {};
+            toAdd.id = photo.id;
+            toAdd.roverName = photo.rover.name;
+            toAdd.camera = photo.camera.full_name;
+            toAdd.img_src = photo.img_src;
+            photosToReturn.push(toAdd);
+        }
     }
     return photosToReturn;
 };
