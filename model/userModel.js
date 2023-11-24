@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
         required: [true, "A user must have a username"],
         minLength: [5, "name too short(min=5)!"],
         maxLength: [15, "name too long(max=15)!"]
-    }, avatar: String, quizList: { //can a admin give quize?
+    }, avatar: String,
+    quizList: { //can a admin give quize?
         type: mongoose.Schema.ObjectId, ref: 'QuizList'
     }, quizCreated: {
         type: mongoose.Schema.ObjectId, ref: 'QuizList'
