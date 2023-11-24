@@ -1,4 +1,5 @@
 const User = require("./../model/userModel");
+const QuizList = require("./../model/quizListModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const newsController = require("./newsController");
@@ -82,8 +83,14 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
         return next(new AppError("Incorrect password!", 401));
     }
 
-    // user = await User.findByIdAndUpdate(req.user._id, {active: false});
-    user = await User.findByIdAndDelete(req.user._id);
+
+    //delete the quizList of the user
+    await QuizList.findByIdAndDelete(user.quizList);
+    await QuizList.findByIdAndDelete(user.quizCreated);
+
+    //delete the user
+    await User.findByIdAndDelete(req.user._id);
+
 
 
     //we won't see the response in postman as status code is 204
